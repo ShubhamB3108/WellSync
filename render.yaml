@@ -14,7 +14,7 @@ services:
       - key: DATABASE_URL
         value: postgresql://postgres:HelloSupabase31@db.iodkvsaqquryaarfjttz.supabase.co:5432/postgres
       - key: JWT_SECRET
-        generateCryptoKey: true
+        generateValue: true
       - key: SIMULATOR_ENABLED
         value: "true"
       - key: SIMULATOR_TICK_SECONDS
