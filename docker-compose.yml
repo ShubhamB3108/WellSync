@@ -5,15 +5,15 @@ services:
     image: timescale/timescaledb:latest-pg16
     restart: always
     environment:
-      POSTGRES_USER: wellsync
-      POSTGRES_PASSWORD: wellsync
-      POSTGRES_DB: wellsync
+      POSTGRES_USER: ${POSTGRES_USER:-wellsync}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wellsync}
+      POSTGRES_DB: ${POSTGRES_DB:-wellsync}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wellsync -d wellsync"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wellsync} -d ${POSTGRES_DB:-wellsync}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,19 +24,19 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      DATABASE_URL: postgresql://wellsync:wellsync@db:5432/wellsync
-      JWT_SECRET: production-secret-wellsync-sih-2026-baghewala-heavy-oil-32chars
-      JWT_ACCESS_TTL_MIN: 15
-      JWT_REFRESH_TTL_DAYS: 7
-      SIMULATOR_TICK_SECONDS: 10
-      SIMULATOR_ENABLED: "true"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://wellsync:wellsync@db:5432/wellsync}
+      JWT_SECRET: ${JWT_SECRET:-production-secret-wellsync-sih-2026-baghewala-heavy-oil-32chars}
+      JWT_ACCESS_TTL_MIN: ${JWT_ACCESS_TTL_MIN:-15}
+      JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS:-7}
+      SIMULATOR_TICK_SECONDS: ${SIMULATOR_TICK_SECONDS:-10}
+      SIMULATOR_ENABLED: ${SIMULATOR_ENABLED:-true}
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")'"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,10 +47,13 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
+      - "${FRONTEND_PORT:-80}:80"
       - "3000:80"
       - "5173:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   pgdata:
+

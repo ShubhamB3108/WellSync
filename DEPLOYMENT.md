@@ -1,0 +1,265 @@
+# WellSync 🛢️⚡ Deployment Guide
+
+This document provides production deployment procedures for **WellSync** — the AI-Enabled Well-to-Surface Digital Twin for CSS Cycle & Sucker Rod Pump Optimization.
+
+---
+
+## 📋 Architecture Overview
+
+WellSync is composed of three interconnected services:
+
+```mermaid
+flowchart LR
+    Browser["Client Browser"] -->|HTTP / Port 80, 5173| Nginx["Nginx Reverse Proxy & Static SPA"]
+    Nginx -->|/api/* & /health| FastAPI["FastAPI Backend (Port 8000)"]
+    FastAPI -->|PostgreSQL Wire (Port 5432)| DB[("TimescaleDB / PostgreSQL")]
+    FastAPI --> ML["Pre-Trained Dyno XGBoost/GB Model"]
+```
+
+1. **Frontend**: React 19 + TypeScript + Vite, served via **Nginx** (Alpine) with HTTP compression, security headers, and reverse proxy for `/api/` and `/health`.
+2. **Backend**: FastAPI + Python 3.11/3.13 + Uvicorn, running physics reservoir models, ML dynamometer classifier, and APScheduler simulation engine.
+3. **Database**: PostgreSQL 16 with TimescaleDB extension for time-series sensor telemetry and historical CSS cycles.
+
+---
+
+## 🚀 Option 1: Docker Compose Deployment (Recommended)
+
+Docker Compose is the fastest and most reliable deployment method for single-node servers, cloud VMs (AWS EC2, Azure VM, GCP Compute Engine, DigitalOcean Droplet), or on-premise servers.
+
+### Prerequisites
+- Docker Engine 24.0+
+- Docker Compose v2.20+
+- At least 2 CPU cores and 4 GB RAM
+
+### Step 1: Clone the Repository & Setup Environment
+
+```bash
+git clone https://github.com/your-org/wellSync.git
+cd wellSync
+
+# Create production environment file from template
+cp .env.example .env
+```
+
+### Step 2: Configure Environment Variables
+
+Edit `.env` to configure your production secrets:
+
+```ini
+# Production Secret (Generate with: openssl rand -hex 32)
+JWT_SECRET=your-32-character-or-longer-production-secret-here
+
+# Database Credentials
+POSTGRES_USER=wellsync
+POSTGRES_PASSWORD=choose_a_strong_database_password
+POSTGRES_DB=wellsync
+DATABASE_URL=postgresql://wellsync:choose_a_strong_database_password@db:5432/wellsync
+
+# Simulator configuration:
+# Keep 'true' for standalone demo/synthetic data or 'false' when connected to live SCADA
+SIMULATOR_ENABLED=true
+SIMULATOR_TICK_SECONDS=10
+
+# Ports
+FRONTEND_PORT=80
+BACKEND_PORT=8000
+DB_PORT=5432
+```
+
+### Step 3: Build & Launch Services
+
+```bash
+# Build images and start containers in detached mode
+docker compose up -d --build
+```
+
+### Step 4: Verify Deployment Health
+
+```bash
+# Check running containers
+docker compose ps
+
+# Check backend health check
+curl http://localhost:8000/health
+# Expected JSON output:
+# {"status":"healthy","db":"ok","simulator":"running","model_loaded":true,"field":"Baghewala, Rajasthan (Jodhpur Sandstone)"}
+
+# View container logs
+docker compose logs -f backend
+docker compose logs -f frontend
+```
+
+### Step 5: Access the Application
+
+- **Web Dashboard:** `http://<your-server-ip>` or `http://localhost`
+- **FastAPI OpenAPI Docs:** `http://<your-server-ip>:8000/docs`
+
+---
+
+## ☁️ Option 2: Cloud PaaS Deployment (Render / Railway / Fly.io)
+
+For cloud platform deployments without managing Docker daemons manually:
+
+### 1. Database Provisioning
+- Provision a **PostgreSQL 15+** or **TimescaleDB** instance.
+- Copy the provided `DATABASE_URL` connection string.
+
+### 2. Backend Service (FastAPI)
+- **Root Directory:** `backend`
+- **Runtime:** Python 3.11+
+- **Build Command:**
+  ```bash
+  pip install -r requirements.txt && python ml/train_dyno_classifier.py
+  ```
+- **Start Command:**
+  ```bash
+  uvicorn app.main:app --host 0.0.0.0 --port $PORT
+  ```
+- **Environment Variables:**
+  - `DATABASE_URL`: Your managed PostgreSQL URL
+  - `JWT_SECRET`: Random 32+ character hex string
+  - `SIMULATOR_ENABLED`: `true`
+
+### 3. Frontend Service (Vite Static Site / Web Service)
+- **Root Directory:** `frontend`
+- **Build Command:** `npm install && npm run build`
+- **Publish Directory:** `dist`
+- **Environment Variables:**
+  - `VITE_API_URL`: `https://<your-backend-domain>/api/v1`
+
+---
+
+## 🏢 Option 3: Bare-Metal Linux VM Deployment (Systemd + Nginx)
+
+Used for on-premise deployments at OIL facilities or enterprise Linux environments (Ubuntu 22.04 / RHEL 9).
+
+### 1. System Dependencies
+```bash
+sudo apt-get update
+sudo apt-get install -y python3-venv python3-pip nodejs npm nginx postgresql
+```
+
+### 2. Backend Service Setup
+```bash
+cd /opt/wellSync
+
+# Setup virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+
+# Train / verify ML model
+python backend/ml/train_dyno_classifier.py
+
+# Initialize and seed database
+PYTHONPATH=backend python backend/seed.py
+```
+
+Create Systemd Service (`/etc/systemd/system/wellsync-backend.service`):
+```ini
+[Unit]
+Description=WellSync FastAPI Application
+After=network.target postgresql.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/wellSync
+Environment="PATH=/opt/wellSync/.venv/bin"
+Environment="PYTHONPATH=backend"
+Environment="DATABASE_URL=postgresql://wellsync:password@localhost:5432/wellsync"
+Environment="JWT_SECRET=production-secret-key-32chars"
+ExecStart=/opt/wellSync/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start backend:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now wellsync-backend
+```
+
+### 3. Frontend Build & Nginx Host
+```bash
+cd /opt/wellSync/frontend
+npm install
+npm run build
+sudo cp -r dist/* /var/www/wellsync/
+```
+
+Configure Nginx (`/etc/nginx/sites-available/wellsync`):
+```nginx
+server {
+    listen 80;
+    server_name wellsync.yourdomain.com;
+
+    client_max_body_size 50M;
+
+    location / {
+        root /var/www/wellsync;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /health {
+        proxy_pass http://127.0.0.1:8000/health;
+    }
+}
+```
+
+Enable site:
+```bash
+sudo ln -s /etc/nginx/sites-available/wellsync /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl restart nginx
+```
+
+---
+
+## 🔒 Production Security Checklist
+
+- [ ] **Change Default JWT Secret**: Ensure `JWT_SECRET` in `.env` is randomly generated and never committed to source control.
+- [ ] **Change Database Passwords**: Never use default credentials (`wellsync / wellsync`) in production.
+- [ ] **Enable HTTPS / SSL**: Terminate TLS using Let's Encrypt / Certbot on Nginx:
+  ```bash
+  sudo certbot --nginx -d wellsync.yourdomain.com
+  ```
+- [ ] **Firewall Ports**: Only expose port `80` (HTTP) and `443` (HTTPS) to the public internet. Keep `5432` (PostgreSQL) and `8000` (FastAPI) internal.
+- [ ] **CORS Restrictions**: Set `CORS_ORIGINS` in backend configuration to only allow authorized domain names.
+
+---
+
+## 👥 Pre-Configured Demo Accounts
+
+Once deployed, the following demo roles are pre-seeded in the database:
+
+| Role | Email | Password | Intended Workflow |
+|---|---|---|---|
+| **Field Engineer** | `field@wellsync.demo` | `wellsync123` | Monitored dyno cards, fluid pound response, SPM approval |
+| **Reservoir Lead** | `reservoir@wellsync.demo` | `wellsync123` | CSS cycle parameter optimization, decline curve what-if |
+| **Operations Manager** | `ops@wellsync.demo` | `wellsync123` | Field-wide SOR, energy cost per bbl, PDF/CSV report exports |
+| **System Administrator** | `admin@wellsync.demo` | `wellsync123` | User provisioning, switching between Simulator & CSV Ingestion |
+
+---
+
+## 💾 Database Maintenance & Backup
+
+### Backup Database
+```bash
+docker compose exec -t db pg_dump -U wellsync wellsync > wellsync_backup_$(date +%F).sql
+```
+
+### Restore Database
+```bash
+cat wellsync_backup_2026-09-28.sql | docker compose exec -T db psql -U wellsync -d wellsync
+```

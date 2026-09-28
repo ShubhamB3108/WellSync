@@ -1,6 +1,9 @@
 import os
 from typing import List
 
+_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+_DEFAULT_MODEL_PATH = os.path.join(_BASE_DIR, "ml", "models", "dyno_classifier.joblib")
+
 class Settings:
     PROJECT_NAME: str = "WellSync"
     API_V1_STR: str = "/api/v1"
@@ -28,6 +31,7 @@ class Settings:
     ]
     
     # ML Models path
-    DYNO_MODEL_PATH: str = os.getenv("DYNO_MODEL_PATH", "backend/ml/models/dyno_classifier.joblib")
+    DYNO_MODEL_PATH: str = os.getenv("DYNO_MODEL_PATH", _DEFAULT_MODEL_PATH)
 
 settings = Settings()
+
