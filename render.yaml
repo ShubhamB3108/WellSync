@@ -37,4 +37,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://wellsync-backend.onrender.com/api/v1
+        value: https://wellsync-backend-m8a8.onrender.com/api/v1

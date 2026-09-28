@@ -270,9 +270,9 @@ Domain Monitor performs free, continuous external uptime and ping monitoring. Ev
 3. Configure the monitor:
    - **Monitor Type**: `HTTP(s)` / `Uptime Monitoring`
    - **Friendly Name**: `WellSync Backend`
-   - **URL to Monitor**: `https://wellsync-backend.onrender.com/health`
-     *(Alternative endpoint: `https://wellsync-backend.onrender.com/api/v1/uptime/ping`)*
-   - **Check Interval**: `5 minutes` *(must be less than Render's 15-minute timeout)*
+   - **URL to Monitor**: `https://wellsync-backend-m8a8.onrender.com/health`
+     *(Alternative endpoint: `https://wellsync-backend-m8a8.onrender.com/api/v1/uptime/ping`)*
+   - **Check Interval**: `5 or 10 minutes` *(safely below Render's 15-minute timeout)*
    - **HTTP Method**: `GET` or `HEAD`
    - **Accepted Status Code**: `200 OK`
 4. Save the monitor. Domain Monitor will now ping the backend around the clock.

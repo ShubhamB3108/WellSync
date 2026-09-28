@@ -14,7 +14,7 @@ jobs:
       - name: Send Keep-Alive HTTP Probe (domain-monitor compatible)
         run: |
           echo "Sending keepalive probe to WellSync backend on Render..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 30 "https://wellsync-backend.onrender.com/health")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 30 "https://wellsync-backend-m8a8.onrender.com/health")
           echo "Response HTTP Status: $STATUS"
           if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 301 ] || [ "$STATUS" -eq 302 ]; then
             echo "SUCCESS: Render backend is online. Idle timer reset."
@@ -22,6 +22,6 @@ jobs:
             echo "WARNING: Backend returned status $STATUS (or cold start in progress)."
             # Retry after 15 seconds in case of Render cold-start spin-up
             sleep 15
-            RETRY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 45 "https://wellsync-backend.onrender.com/health")
+            RETRY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 45 "https://wellsync-backend-m8a8.onrender.com/health")
             echo "Retry HTTP Status: $RETRY_STATUS"
           fi
