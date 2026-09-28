@@ -96,36 +96,24 @@ docker compose logs -f frontend
 
 ---
 
-## ☁️ Option 2: Cloud PaaS Deployment (Render / Railway / Fly.io)
+## ☁️ Option 2: Render Deployment (1-Click Blueprint)
 
-For cloud platform deployments without managing Docker daemons manually:
+The repository includes a ready-to-use Render Blueprint (`render.yaml`) that provisions the complete architecture automatically.
 
-### 1. Database Provisioning
-- Provision a **PostgreSQL 15+** or **TimescaleDB** instance.
-- Copy the provided `DATABASE_URL` connection string.
+### Automated Deployment Steps:
+1. Sign in to your **[Render Dashboard](https://dashboard.render.com)**.
+2. Click **New +** at the top right and select **Blueprint**.
+3. Connect your GitHub account and choose repository: **`ShubhamB3108/WellSync`**.
+4. Render will parse `render.yaml` and show the 3 resources to create:
+   - 🐘 **`wellsync-db`**: Managed PostgreSQL database.
+   - ⚡ **`wellsync-backend`**: FastAPI Web Service (installs requirements, trains ML classifier, auto-connects to database).
+   - 🌐 **`wellsync-frontend`**: React SPA (installs packages, builds bundle, configures SPA client routing).
+5. Click **Apply**.
+6. Once deployed, Render gives you live public HTTPS URLs for both frontend and backend.
 
-### 2. Backend Service (FastAPI)
-- **Root Directory:** `backend`
-- **Runtime:** Python 3.11+
-- **Build Command:**
-  ```bash
-  pip install -r requirements.txt && python ml/train_dyno_classifier.py
-  ```
-- **Start Command:**
-  ```bash
-  uvicorn app.main:app --host 0.0.0.0 --port $PORT
-  ```
-- **Environment Variables:**
-  - `DATABASE_URL`: Your managed PostgreSQL URL
-  - `JWT_SECRET`: Random 32+ character hex string
-  - `SIMULATOR_ENABLED`: `true`
+> [!TIP]
+> If Render assigns a customized subdomain to your backend (e.g., `wellsync-backend-abcd.onrender.com`), verify that `VITE_API_URL` under **wellsync-frontend** > **Environment** matches `https://<your-backend-subdomain>.onrender.com/api/v1`.
 
-### 3. Frontend Service (Vite Static Site / Web Service)
-- **Root Directory:** `frontend`
-- **Build Command:** `npm install && npm run build`
-- **Publish Directory:** `dist`
-- **Environment Variables:**
-  - `VITE_API_URL`: `https://<your-backend-domain>/api/v1`
 
 ---
 
