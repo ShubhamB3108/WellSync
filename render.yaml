@@ -12,7 +12,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        value: postgresql://postgres:HelloSupabase31@db.iodkvsaqquryaarfjttz.supabase.co:5432/postgres
+        value: postgresql://postgres.iodkvsaqquryaarfjttz:HelloSupabase31@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
       - key: JWT_SECRET
         generateValue: true
       - key: SIMULATOR_ENABLED
