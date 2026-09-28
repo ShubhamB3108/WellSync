@@ -24,7 +24,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://wellsync:wellsync@db:5432/wellsync}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:HelloSupabase31@db.iodkvsaqquryaarfjttz.supabase.co:5432/postgres}
       JWT_SECRET: ${JWT_SECRET:-production-secret-wellsync-sih-2026-baghewala-heavy-oil-32chars}
       JWT_ACCESS_TTL_MIN: ${JWT_ACCESS_TTL_MIN:-15}
       JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS:-7}

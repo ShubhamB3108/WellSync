@@ -14,7 +14,7 @@ class Settings:
     JWT_ACCESS_TTL_MIN: int = int(os.getenv("JWT_ACCESS_TTL_MIN", "15"))
     JWT_REFRESH_TTL_DAYS: int = int(os.getenv("JWT_REFRESH_TTL_DAYS", "7"))
     
-    # Database
+    # Database (Defaults to SQLite for tests, overridden by DATABASE_URL on Render / Supabase)
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./wellsync.db")
     
     # Simulator & Scheduler

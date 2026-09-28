@@ -1,9 +1,3 @@
-databases:
-  - name: wellsync-db
-    databaseName: wellsync
-    user: wellsync
-    plan: free
-
 services:
   # ----------------------------------------------------------------------------
   # WellSync FastAPI Backend Web Service
@@ -18,9 +12,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: wellsync-db
-          property: connectionString
+        value: postgresql://postgres:HelloSupabase31@db.iodkvsaqquryaarfjttz.supabase.co:5432/postgres
       - key: JWT_SECRET
         generateCryptoKey: true
       - key: SIMULATOR_ENABLED
