@@ -4,6 +4,20 @@ from typing import List
 _BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 _DEFAULT_MODEL_PATH = os.path.join(_BASE_DIR, "ml", "models", "dyno_classifier.joblib")
 
+# Auto-load environment variables from .env if present
+for _dir in [_BASE_DIR, os.path.dirname(_BASE_DIR)]:
+    _env_file = os.path.join(_dir, ".env")
+    if os.path.isfile(_env_file):
+        with open(_env_file, "r", encoding="utf-8") as _f:
+            for _line in _f:
+                _line = _line.strip()
+                if _line and not _line.startswith("#") and "=" in _line:
+                    _k, _v = _line.split("=", 1)
+                    _k, _v = _k.strip(), _v.strip()
+                    if _k not in os.environ:
+                        os.environ[_k] = _v
+        break
+
 class Settings:
     PROJECT_NAME: str = "WellSync"
     API_V1_STR: str = "/api/v1"
