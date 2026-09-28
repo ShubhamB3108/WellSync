@@ -87,7 +87,7 @@ app.include_router(uptime_router, prefix=settings.API_V1_STR)
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health_check(request: Request, response: Response, db=Depends(get_db)):
     """
-    Health check and uptime monitoring probe for Render and Domain Monitor (https://domain-monitor.io/).
+    Health check and uptime monitoring probe for Render and UptimeRobot (https://uptimerobot.com/).
     Supports both GET and HEAD methods. Resets the 15-minute Render free-tier sleep timer.
     """
     source = request.headers.get("user-agent", "health-check")
@@ -113,7 +113,7 @@ def health_check(request: Request, response: Response, db=Depends(get_db)):
         "model_loaded": model is not None or True,
         "field": "Baghewala, Rajasthan (Jodhpur Sandstone)",
         "monitoring": {
-            "service": "Domain Monitor (domain-monitor.io) ready",
+            "service": "UptimeRobot (uptimerobot.com) ready",
             "anti_sleep": "active"
         }
     }

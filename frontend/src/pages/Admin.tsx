@@ -24,7 +24,7 @@ import { User } from '../types';
 import { DatabaseLoader } from '../components/DatabaseLoader';
 
 export const Admin: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'sources' | 'users' | 'domain_monitor'>('sources');
+  const [activeTab, setActiveTab] = useState<'sources' | 'users' | 'uptimerobot'>('sources');
   const [currentSource, setCurrentSource] = useState<string>('simulator');
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<any>(null);
@@ -185,13 +185,13 @@ export const Admin: React.FC = () => {
         </button>
         <button
           onClick={() => {
-            setActiveTab('domain_monitor');
+            setActiveTab('uptimerobot');
             fetchUptimeStats();
           }}
-          className={`btn btn-sm ${activeTab === 'domain_monitor' ? 'btn-primary' : 'btn-secondary'}`}
+          className={`btn btn-sm ${activeTab === 'uptimerobot' ? 'btn-primary' : 'btn-secondary'}`}
         >
           <Globe size={14} />
-          <span>Domain Monitor (domain-monitor.io) & Keep-Alive</span>
+          <span>UptimeRobot (uptimerobot.com) & Keep-Alive</span>
         </button>
       </div>
 
@@ -434,8 +434,8 @@ export const Admin: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 3: Domain Monitor & Keep-Alive */}
-      {activeTab === 'domain_monitor' && (
+      {/* Tab 3: UptimeRobot & Keep-Alive */}
+      {activeTab === 'uptimerobot' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Top Banner */}
           <div className="panel" style={{
@@ -460,26 +460,26 @@ export const Admin: React.FC = () => {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      Domain Monitor (domain-monitor.io) Integration
+                      UptimeRobot (uptimerobot.com) Integration
                     </h2>
                     <span className="badge badge-normal" style={{ fontSize: '10px' }}>
                       24/7 Anti-Sleep Active
                     </span>
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                    Render free web services spin down after 15 minutes of inactivity. Monitor via <strong>domain-monitor.io</strong> to keep the backend permanently awake.
+                    Render free web services spin down after 15 minutes of inactivity. Monitor via <strong>uptimerobot.com</strong> to keep the backend permanently awake.
                   </p>
                 </div>
               </div>
 
               <a
-                href="https://domain-monitor.io/"
+                href="https://uptimerobot.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-primary btn-sm"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
               >
-                <span>Open domain-monitor.io</span>
+                <span>Open uptimerobot.com</span>
                 <ExternalLink size={13} />
               </a>
             </div>
@@ -491,22 +491,22 @@ export const Admin: React.FC = () => {
               <div className="panel-header">
                 <div className="panel-title">
                   <Server size={18} color="var(--accent-blue)" />
-                  <span>Setup Guide for domain-monitor.io</span>
+                  <span>Setup Guide for UptimeRobot</span>
                 </div>
                 <span className="badge badge-info">1-Minute Setup</span>
               </div>
 
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
-                Follow these simple steps on <a href="https://domain-monitor.io/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-blue)' }}>domain-monitor.io</a> to ensure zero cold-start delay for evaluators:
+                Follow these simple steps on <a href="https://uptimerobot.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-blue)' }}>uptimerobot.com</a> to ensure zero cold-start delay for evaluators:
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
                 <div style={{ padding: '12px', backgroundColor: 'var(--bg-elevated)', borderRadius: '6px', border: '1px solid var(--border)' }}>
                   <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-blue)', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    Step 1: Create an Uptime Monitor
+                    Step 1: Create an HTTP(s) Monitor
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
-                    In your Domain Monitor dashboard, select <strong>"Uptime Monitoring"</strong> or <strong>"Add Monitor"</strong>.
+                    In your UptimeRobot dashboard, click <strong>"+ Add New Monitor"</strong> and select Monitor Type: <strong>HTTP(s)</strong>.
                   </div>
                 </div>
 
@@ -526,10 +526,10 @@ export const Admin: React.FC = () => {
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
                     }}>
-                      {uptimeStats?.domain_monitor_setup?.recommended_url || 'https://wellsync-backend-1emc.onrender.com/health'}
+                      {uptimeStats?.uptimerobot_setup?.recommended_url || uptimeStats?.domain_monitor_setup?.recommended_url || 'https://wellsync-backend-1emc.onrender.com/health'}
                     </code>
                     <button
-                      onClick={() => handleCopy(uptimeStats?.domain_monitor_setup?.recommended_url || 'https://wellsync-backend-1emc.onrender.com/health')}
+                      onClick={() => handleCopy(uptimeStats?.uptimerobot_setup?.recommended_url || uptimeStats?.domain_monitor_setup?.recommended_url || 'https://wellsync-backend-1emc.onrender.com/health')}
                       className="btn btn-secondary btn-sm"
                       title="Copy URL"
                     >
@@ -541,10 +541,10 @@ export const Admin: React.FC = () => {
 
                 <div style={{ padding: '12px', backgroundColor: 'var(--bg-elevated)', borderRadius: '6px', border: '1px solid var(--border)' }}>
                   <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-blue)', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    Step 3: Set Check Frequency to 5 or 10 Minutes
+                    Step 3: Set Check Frequency to 5 Minutes
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    Because Render sleeps after <strong>15 minutes</strong>, choosing a <strong>5 or 10-minute interval</strong> guarantees that Render’s idle timer is continuously reset before sleeping.
+                    Because Render sleeps after <strong>15 minutes</strong>, choosing a <strong>5-minute interval</strong> guarantees that Render’s idle timer is continuously reset before sleeping.
                   </div>
                 </div>
               </div>
@@ -556,10 +556,10 @@ export const Admin: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <code style={{ fontSize: '11px', color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {uptimeStats?.domain_monitor_setup?.alternative_url || 'https://wellsync-backend-1emc.onrender.com/api/v1/uptime/ping'}
+                    {uptimeStats?.uptimerobot_setup?.alternative_url || uptimeStats?.domain_monitor_setup?.alternative_url || 'https://wellsync-backend-1emc.onrender.com/api/v1/uptime/ping'}
                   </code>
                   <button
-                    onClick={() => handleCopy(uptimeStats?.domain_monitor_setup?.alternative_url || 'https://wellsync-backend-1emc.onrender.com/api/v1/uptime/ping')}
+                    onClick={() => handleCopy(uptimeStats?.uptimerobot_setup?.alternative_url || uptimeStats?.domain_monitor_setup?.alternative_url || 'https://wellsync-backend-1emc.onrender.com/api/v1/uptime/ping')}
                     className="btn btn-secondary btn-sm"
                   >
                     {copiedUrl?.includes('/uptime/ping') ? <Check size={13} color="#22C55E" /> : <Copy size={13} />}
@@ -652,7 +652,7 @@ export const Admin: React.FC = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'var(--bg-elevated)', borderRadius: '4px' }}>
-                    <span style={{ color: 'var(--text-primary)' }}>1. domain-monitor.io Cloud Probe</span>
+                    <span style={{ color: 'var(--text-primary)' }}>1. UptimeRobot (uptimerobot.com) Cloud Probe</span>
                     <span className="badge badge-normal" style={{ fontSize: '10px' }}>Recommended</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'var(--bg-elevated)', borderRadius: '4px' }}>

@@ -22,7 +22,7 @@ def test_health_check_supports_head():
     data = resp_get.json()
     assert data["status"] == "healthy"
     assert "monitoring" in data
-    assert "domain-monitor.io" in data["monitoring"]["service"]
+    assert "uptimerobot.com" in data["monitoring"]["service"]
 
     resp_head = client.head("/health")
     assert resp_head.status_code == 200
@@ -34,8 +34,8 @@ def test_uptime_stats():
     data = resp.json()
     assert data["status"] == "online"
     assert "uptime_seconds" in data
-    assert "domain_monitor_setup" in data
-    setup = data["domain_monitor_setup"]
-    assert setup["service_name"] == "Domain Monitor"
-    assert setup["service_website"] == "https://domain-monitor.io/"
+    assert "uptimerobot_setup" in data
+    setup = data["uptimerobot_setup"]
+    assert setup["service_name"] == "UptimeRobot"
+    assert setup["service_website"] == "https://uptimerobot.com/"
     assert "https://wellsync-backend-1emc.onrender.com/health" in setup["recommended_url"]

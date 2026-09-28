@@ -14,7 +14,7 @@ _LAST_PING_SOURCE: Optional[str] = None
 _LAST_OUTBOUND_PING: Optional[Dict[str, Any]] = None
 
 def record_ping(source: str = "unknown") -> Dict[str, Any]:
-    """Records an incoming ping from Domain Monitor (domain-monitor.io), browser, or scheduler."""
+    """Records an incoming ping from UptimeRobot (uptimerobot.com), browser, or scheduler."""
     global _PING_COUNT, _LAST_PING_TIME, _LAST_PING_SOURCE
     _PING_COUNT += 1
     _LAST_PING_TIME = datetime.now(timezone.utc)
@@ -27,7 +27,7 @@ def record_ping(source: str = "unknown") -> Dict[str, Any]:
     }
 
 def get_uptime_stats() -> Dict[str, Any]:
-    """Returns comprehensive uptime, ping telemetry, and domain-monitor.io integration data."""
+    """Returns comprehensive uptime, ping telemetry, and UptimeRobot (uptimerobot.com) integration data."""
     now = datetime.now(timezone.utc)
     uptime_sec = int((now - _START_TIME).total_seconds())
     days = uptime_sec // 86400
@@ -38,6 +38,27 @@ def get_uptime_stats() -> Dict[str, Any]:
 
     target_health_url = f"{settings.RENDER_EXTERNAL_URL}/health"
     target_ping_url = f"{settings.RENDER_EXTERNAL_URL}{settings.API_V1_STR}/uptime/ping"
+
+    setup_data = {
+        "service_name": "UptimeRobot",
+        "service_website": "https://uptimerobot.com/",
+        "signup_url": "https://uptimerobot.com/signUp",
+        "features": ["50 Free Monitors", "HTTP(s) Monitoring", "5-Min Check Interval", "SSL & Port Monitoring", "Status Pages"],
+        "monitor_type": "HTTP(s)",
+        "friendly_name": "WellSync Render Backend (Anti-Sleep)",
+        "recommended_url": target_health_url,
+        "alternative_url": target_ping_url,
+        "recommended_interval_minutes": 5,
+        "http_methods": ["GET", "HEAD"],
+        "expected_status_code": 200,
+        "instructions": (
+            "Render free tier web services spin down after 15 minutes of inactivity. "
+            "Adding a free HTTP(s) Monitor on https://uptimerobot.com/ targeting "
+            f"{target_health_url} with a 5-minute check interval "
+            "sends periodic external HTTP requests that reset Render's 15-minute idle timer, "
+            "ensuring the backend stays permanently awake 24/7."
+        )
+    }
 
     return {
         "status": "online",
@@ -54,26 +75,8 @@ def get_uptime_stats() -> Dict[str, Any]:
             "interval_minutes": settings.KEEP_ALIVE_INTERVAL_MINUTES,
             "idle_sleep_threshold_minutes": 15
         },
-        "domain_monitor_setup": {
-            "service_name": "Domain Monitor",
-            "service_website": "https://domain-monitor.io/",
-            "signup_url": "https://domain-monitor.io/account/create/",
-            "features": ["Uptime Monitoring", "SSL Certificate Monitoring", "Ping Test", "Status Pages"],
-            "monitor_type": "HTTP(s) / Uptime Monitoring",
-            "friendly_name": "WellSync Render Backend (Anti-Sleep)",
-            "recommended_url": target_health_url,
-            "alternative_url": target_ping_url,
-            "recommended_interval_minutes": 5,
-            "http_methods": ["GET", "HEAD"],
-            "expected_status_code": 200,
-            "instructions": (
-                "Render free tier web services spin down after 15 minutes of inactivity. "
-                "Adding an Uptime Monitor on https://domain-monitor.io/ targeting "
-                f"{target_health_url} with a 5-minute or 10-minute check interval "
-                "sends periodic external HTTP requests that reset Render's 15-minute idle timer, "
-                "ensuring the backend stays permanently awake 24/7."
-            )
-        }
+        "uptimerobot_setup": setup_data,
+        "domain_monitor_setup": setup_data
     }
 
 def execute_keepalive_ping() -> Optional[Dict[str, Any]]:
@@ -87,7 +90,7 @@ def execute_keepalive_ping() -> Optional[Dict[str, Any]]:
 
     target_url = f"{settings.RENDER_EXTERNAL_URL}/health"
     headers = {
-        "User-Agent": "WellSync-KeepAlive/1.0 (Render-Anti-Sleep-Worker; Domain-Monitor-Integrated)",
+        "User-Agent": "WellSync-KeepAlive/1.0 (Render-Anti-Sleep-Worker; UptimeRobot-Integrated)",
         "X-Keep-Alive-Source": "internal_scheduler"
     }
 

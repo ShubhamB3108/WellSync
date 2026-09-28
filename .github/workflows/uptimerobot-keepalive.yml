@@ -1,4 +1,4 @@
-name: Domain Monitor & Render Keep-Alive
+name: UptimeRobot & Render Keep-Alive
 
 on:
   schedule:
@@ -11,7 +11,7 @@ jobs:
     name: Ping WellSync Render Backend
     runs-on: ubuntu-latest
     steps:
-      - name: Send Keep-Alive HTTP Probe (domain-monitor compatible)
+      - name: Send Keep-Alive HTTP Probe (UptimeRobot compatible)
         run: |
           echo "Sending keepalive probe to WellSync backend on Render..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 30 "https://wellsync-backend-1emc.onrender.com/health")

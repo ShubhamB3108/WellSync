@@ -6,7 +6,7 @@ router = APIRouter(prefix="/uptime", tags=["uptime"])
 @router.api_route("/ping", methods=["GET", "HEAD"])
 def ping_endpoint(request: Request, response: Response):
     """
-    Dedicated lightweight ping endpoint for Domain Monitor (https://domain-monitor.io/)
+    Dedicated lightweight ping endpoint for UptimeRobot (https://uptimerobot.com/)
     and external keep-alive probes. Supports both GET and HEAD requests.
     """
     source = request.headers.get("user-agent", "unknown")
@@ -22,7 +22,7 @@ def ping_endpoint(request: Request, response: Response):
 def uptime_stats():
     """
     Returns server uptime telemetry, total pings received, and
-    Domain Monitor (domain-monitor.io) integration specifications.
+    UptimeRobot (uptimerobot.com) integration specifications.
     """
     return get_uptime_stats()
 
