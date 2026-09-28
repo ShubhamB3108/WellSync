@@ -23,6 +23,7 @@ services:
   - type: web
     name: wellsync-backend
     runtime: python
+    region: singapore
     rootDir: backend
     branch: feature/frontend-improvements
     plan: free
