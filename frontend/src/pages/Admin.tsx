@@ -526,10 +526,10 @@ export const Admin: React.FC = () => {
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
                     }}>
-                      {uptimeStats?.domain_monitor_setup?.recommended_url || 'https://wellsync-backend-m8a8.onrender.com/health'}
+                      {uptimeStats?.domain_monitor_setup?.recommended_url || 'https://wellsync-backend-1emc.onrender.com/health'}
                     </code>
                     <button
-                      onClick={() => handleCopy(uptimeStats?.domain_monitor_setup?.recommended_url || 'https://wellsync-backend-m8a8.onrender.com/health')}
+                      onClick={() => handleCopy(uptimeStats?.domain_monitor_setup?.recommended_url || 'https://wellsync-backend-1emc.onrender.com/health')}
                       className="btn btn-secondary btn-sm"
                       title="Copy URL"
                     >
@@ -556,10 +556,10 @@ export const Admin: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <code style={{ fontSize: '11px', color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {uptimeStats?.domain_monitor_setup?.alternative_url || 'https://wellsync-backend-m8a8.onrender.com/api/v1/uptime/ping'}
+                    {uptimeStats?.domain_monitor_setup?.alternative_url || 'https://wellsync-backend-1emc.onrender.com/api/v1/uptime/ping'}
                   </code>
                   <button
-                    onClick={() => handleCopy(uptimeStats?.domain_monitor_setup?.alternative_url || 'https://wellsync-backend-m8a8.onrender.com/api/v1/uptime/ping')}
+                    onClick={() => handleCopy(uptimeStats?.domain_monitor_setup?.alternative_url || 'https://wellsync-backend-1emc.onrender.com/api/v1/uptime/ping')}
                     className="btn btn-secondary btn-sm"
                   >
                     {copiedUrl?.includes('/uptime/ping') ? <Check size={13} color="#22C55E" /> : <Copy size={13} />}

@@ -38,4 +38,4 @@ def test_uptime_stats():
     setup = data["domain_monitor_setup"]
     assert setup["service_name"] == "Domain Monitor"
     assert setup["service_website"] == "https://domain-monitor.io/"
-    assert "https://wellsync-backend-m8a8.onrender.com/health" in setup["recommended_url"]
+    assert "https://wellsync-backend-1emc.onrender.com/health" in setup["recommended_url"]
