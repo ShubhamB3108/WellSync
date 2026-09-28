@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: timescale/timescaledb:latest-pg16
+    restart: always
+    environment:
+      POSTGRES_USER: wellsync
+      POSTGRES_PASSWORD: wellsync
+      POSTGRES_DB: wellsync
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wellsync -d wellsync"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://wellsync:wellsync@db:5432/wellsync
+      JWT_SECRET: production-secret-wellsync-sih-2026-baghewala-heavy-oil-32chars
+      JWT_ACCESS_TTL_MIN: 15
+      JWT_REFRESH_TTL_DAYS: 7
+      SIMULATOR_TICK_SECONDS: 10
+      SIMULATOR_ENABLED: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:80"
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

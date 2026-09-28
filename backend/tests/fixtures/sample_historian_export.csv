@@ -1,0 +1,7 @@
+well_name,reading_time,spm,stroke_length_in,vfd_frequency_hz,pprl_lbf,mprl_lbf,classification
+BGW-001,2026-09-28T08:00:00Z,5.8,86.0,46.4,16400,4200,normal
+BGW-002,2026-09-28T08:00:00Z,5.5,86.0,44.0,16100,4300,normal
+BGW-003,2026-09-28T08:00:00Z,6.6,86.0,52.8,18100,3900,fluid_pound
+BGW-004,2026-09-28T08:00:00Z,5.2,86.0,41.6,15200,4800,gas_interference
+BGW-005,2026-09-28T08:00:00Z,6.0,86.0,48.0,16800,4400,normal
+BGW-006,2026-09-28T08:00:00Z,5.7,86.0,45.6,16300,4250,normal
