@@ -11,6 +11,7 @@ import {
   Activity
 } from 'lucide-react';
 import { KpiTile } from '../components/KpiTile';
+import { DatabaseLoader } from '../components/DatabaseLoader';
 import { wellsApi, reportsApi } from '../api/client';
 import { WellSummary, FieldSummary } from '../types';
 
@@ -41,6 +42,16 @@ export const FieldOverview: React.FC = () => {
     const interval = setInterval(fetchData, 15000); // 15s refresh matching backend debounce
     return () => clearInterval(interval);
   }, []);
+
+  if (isLoading && wells.length === 0) {
+    return (
+      <DatabaseLoader
+        variant="full"
+        message="Loading Baghewala Field Overview from database..."
+        submessage="Connecting to telemetry database to query heavy oil wells, production logs, and digital twin states..."
+      />
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -148,9 +159,14 @@ export const FieldOverview: React.FC = () => {
             <Layers size={18} color="var(--accent-blue)" />
             <span>Well Fleet Digital Twin Status</span>
           </div>
-          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            Total: {wells.length} wells monitored
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            {isLoading && (
+              <DatabaseLoader variant="inline" message="Syncing telemetry..." />
+            )}
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              Total: {wells.length} wells monitored
+            </span>
+          </div>
         </div>
 
         <div className="data-table-container" style={{ border: 'none' }}>
@@ -168,7 +184,14 @@ export const FieldOverview: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {wells.map((well) => (
+              {wells.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-secondary)' }}>
+                    No wells found in database.
+                  </td>
+                </tr>
+              ) : (
+                wells.map((well) => (
                 <tr key={well.id} onClick={() => navigate(`/wells/${well.name}`)} style={{ cursor: 'pointer' }}>
                   <td>
                     <strong style={{ color: 'var(--accent-blue)', fontSize: '13px' }}>
@@ -223,7 +246,7 @@ export const FieldOverview: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

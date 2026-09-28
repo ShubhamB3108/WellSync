@@ -374,3 +374,261 @@ body {
   padding: 24px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
+
+/* ==========================================================================
+   Loading Animations & Database Telemetry Indicators
+   ========================================================================== */
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes pulse-critical {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.25);
+  }
+}
+
+@keyframes topBarProgress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.top-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), #3B82F6, #60A5FA, rgba(59, 130, 246, 0.1));
+  z-index: 9999;
+  animation: topBarProgress 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
+}
+
+/* Header DB Sync Badge */
+.db-sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background-color: var(--bg-elevated);
+  transition: all 0.2s ease;
+  font-family: var(--font-mono);
+}
+
+.db-sync-badge.active {
+  border-color: rgba(59, 130, 246, 0.5);
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #60A5FA;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+}
+
+.db-sync-badge.idle {
+  color: var(--text-secondary);
+}
+
+.db-sync-badge .db-dot-synced {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--status-normal);
+  box-shadow: 0 0 6px var(--status-normal);
+}
+
+.db-sync-badge .db-icon {
+  color: var(--accent-blue);
+}
+
+/* Database Loader Component Styles */
+.db-loader-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  width: 100%;
+}
+
+.db-loader-container.db-loader-full {
+  min-height: 340px;
+  padding: 60px 24px;
+}
+
+.db-loader-container.db-loader-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(15, 20, 25, 0.75);
+  backdrop-filter: blur(3px);
+  z-index: 20;
+  border-radius: 8px;
+}
+
+.db-loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  max-width: 440px;
+}
+
+.db-loader-orb-wrap {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.db-loader-glow-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0) 70%);
+  animation: dbPulse 2s ease-in-out infinite;
+}
+
+.db-loader-orb {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(36, 44, 54, 0.9), rgba(26, 32, 40, 0.9));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(59, 130, 246, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.db-loader-db-icon {
+  color: #60A5FA;
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+  z-index: 2;
+}
+
+.db-loader-spinner {
+  position: absolute;
+  color: var(--accent-blue);
+  opacity: 0.85;
+}
+
+.db-loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.db-loader-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.db-loader-submessage {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  max-width: 380px;
+}
+
+.db-loader-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background-color: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.db-signal-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--accent-blue);
+}
+
+.db-signal-dot.dot-1 {
+  animation: signalBounce 1.4s ease-in-out infinite;
+}
+.db-signal-dot.dot-2 {
+  animation: signalBounce 1.4s ease-in-out infinite 0.2s;
+}
+.db-signal-dot.dot-3 {
+  animation: signalBounce 1.4s ease-in-out infinite 0.4s;
+}
+
+.db-signal-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #93C5FD;
+}
+
+@keyframes signalBounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+    background-color: #93C5FD;
+    box-shadow: 0 0 6px #60A5FA;
+  }
+}
+
+@keyframes dbPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.15);
+  }
+}
+
+/* Inline Loader */
+.db-loader-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.db-loader-inline-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-blue);
+}

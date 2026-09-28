@@ -8,11 +8,13 @@ import {
   AlertTriangle,
   Check,
   X,
-  Clock
+  Clock,
+  RefreshCw
 } from 'lucide-react';
 import { wellsApi, srpApi, optimizationApi } from '../api/client';
 import { DynoCard, SrpOptimizeResponse } from '../types';
 import { DynoCardChart } from '../components/DynoCardChart';
+import { DatabaseLoader } from '../components/DatabaseLoader';
 
 export const SrpDiagnostics: React.FC = () => {
   const { wellId } = useParams<{ wellId: string }>();
@@ -86,6 +88,16 @@ export const SrpDiagnostics: React.FC = () => {
     setRecommendation(null);
   };
 
+  if (isLoading && cards.length === 0) {
+    return (
+      <DatabaseLoader
+        variant="full"
+        message={`Loading dynamometer telemetry for ${wellName} from database...`}
+        submessage="Retrieving surface card coordinates, stroke kinematics, and rod floating risk scores..."
+      />
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Top Header */}
@@ -105,9 +117,15 @@ export const SrpDiagnostics: React.FC = () => {
           </div>
         </div>
 
-        <button onClick={loadData} className="btn btn-secondary btn-sm">
-          <span>Refresh Cards</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {isLoading && (
+            <DatabaseLoader variant="inline" message="Syncing cards..." />
+          )}
+          <button onClick={loadData} className="btn btn-secondary btn-sm" title="Refresh Cards">
+            <RefreshCw size={13} className={isLoading ? 'spin' : ''} />
+            <span>Refresh Cards</span>
+          </button>
+        </div>
       </div>
 
       {actionSuccess && (
@@ -137,7 +155,12 @@ export const SrpDiagnostics: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '520px', overflowY: 'auto' }}>
-            {cards.map((card) => {
+            {cards.length === 0 ? (
+              <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '12px' }}>
+                No dynamometer cards found in database for this well.
+              </div>
+            ) : (
+              cards.map((card) => {
               const isSelected = selectedCard?.id === card.id;
               const isFP = card.classification === 'fluid_pound';
 
@@ -170,7 +193,7 @@ export const SrpDiagnostics: React.FC = () => {
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
         </div>
 

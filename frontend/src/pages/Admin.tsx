@@ -7,10 +7,12 @@ import {
   CheckCircle,
   AlertTriangle,
   FileSpreadsheet,
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react';
 import { adminApi } from '../api/client';
 import { User } from '../types';
+import { DatabaseLoader } from '../components/DatabaseLoader';
 
 export const Admin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'sources' | 'users'>('sources');
@@ -22,6 +24,7 @@ export const Admin: React.FC = () => {
 
   // User management
   const [users, setUsers] = useState<User[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(true);
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newName, setNewName] = useState('');
@@ -30,10 +33,13 @@ export const Admin: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
+      setIsLoadingUsers(true);
       const data = await adminApi.listUsers();
       setUsers(data);
     } catch (err) {
       console.error('Error fetching users:', err);
+    } finally {
+      setIsLoadingUsers(false);
     }
   };
 
@@ -217,7 +223,11 @@ export const Admin: React.FC = () => {
                 className="btn btn-primary"
                 style={{ padding: '10px' }}
               >
-                <FileSpreadsheet size={15} />
+                {isUploading ? (
+                  <Loader2 size={15} className="spin" />
+                ) : (
+                  <FileSpreadsheet size={15} />
+                )}
                 <span>{isUploading ? 'Validating & Ingesting...' : 'Switch Source & Ingest CSV'}</span>
               </button>
             </form>
@@ -248,18 +258,36 @@ export const Admin: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
-                      <td><strong style={{ color: 'var(--text-primary)' }}>{u.full_name}</strong></td>
-                      <td>{u.email}</td>
-                      <td>
-                        <span className="badge badge-info" style={{ textTransform: 'capitalize' }}>
-                          {u.role.replace('_', ' ')}
-                        </span>
+                  {isLoadingUsers ? (
+                    <tr>
+                      <td colSpan={4} style={{ padding: '36px 0' }}>
+                        <DatabaseLoader
+                          variant="panel"
+                          message="Querying authorized user directory..."
+                          submessage="Loading role-based access control records from database..."
+                        />
                       </td>
-                      <td><span style={{ color: 'var(--status-normal)' }}>Active</span></td>
                     </tr>
-                  ))}
+                  ) : users.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>
+                        No users configured.
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map((u) => (
+                      <tr key={u.id}>
+                        <td><strong style={{ color: 'var(--text-primary)' }}>{u.full_name}</strong></td>
+                        <td>{u.email}</td>
+                        <td>
+                          <span className="badge badge-info" style={{ textTransform: 'capitalize' }}>
+                            {u.role.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td><span style={{ color: 'var(--status-normal)' }}>Active</span></td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -327,8 +355,9 @@ export const Admin: React.FC = () => {
                 type="submit"
                 disabled={isCreatingUser}
                 className="btn btn-primary btn-sm"
-                style={{ marginTop: '8px' }}
+                style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
+                {isCreatingUser && <Loader2 size={13} className="spin" />}
                 <span>{isCreatingUser ? 'Creating...' : 'Add Account'}</span>
               </button>
             </form>

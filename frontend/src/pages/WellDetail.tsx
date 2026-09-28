@@ -15,6 +15,7 @@ import { ReservoirSummaryCard } from '../components/ReservoirSummaryCard';
 import { DynoCardChart } from '../components/DynoCardChart';
 import { RiskScoreCard } from '../components/RiskScoreCard';
 import { RecommendationList } from '../components/RecommendationList';
+import { DatabaseLoader } from '../components/DatabaseLoader';
 
 export const WellDetail: React.FC = () => {
   const { wellId } = useParams<{ wellId: string }>();
@@ -85,17 +86,18 @@ export const WellDetail: React.FC = () => {
 
   if (isLoading && !twinState) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        <RefreshCw className="spin" size={24} style={{ marginBottom: '12px' }} />
-        <div>Computing per-well Digital Twin State...</div>
-      </div>
+      <DatabaseLoader
+        variant="full"
+        message={`Loading Digital Twin for ${wellId || 'well'} from database...`}
+        submessage="Querying rod string kinematics, reservoir thermodynamic states, and latest dynamometer telemetry..."
+      />
     );
   }
 
   if (!twinState) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        Well state could not be loaded. Please return to Field Overview.
+        Well state could not be loaded from database. Please return to Field Overview.
       </div>
     );
   }
@@ -126,7 +128,10 @@ export const WellDetail: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {isLoading && (
+            <DatabaseLoader variant="inline" message="Syncing twin..." />
+          )}
           <button
             onClick={() => navigate(`/wells/${twinState.well_name}/css-optimizer`)}
             className="btn btn-secondary btn-sm"
@@ -141,8 +146,8 @@ export const WellDetail: React.FC = () => {
             <Activity size={14} color="var(--accent-blue)" />
             <span>SRP Diagnostics</span>
           </button>
-          <button onClick={loadWellState} className="btn btn-secondary btn-sm" title="Refresh">
-            <RefreshCw size={14} />
+          <button onClick={loadWellState} className="btn btn-secondary btn-sm" title="Refresh Telemetry">
+            <RefreshCw size={14} className={isLoading ? 'spin' : ''} />
           </button>
         </div>
       </div>

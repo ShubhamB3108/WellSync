@@ -7,11 +7,13 @@ import {
   TrendingDown,
   BarChart2,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { wellsApi, cssApi } from '../api/client';
 import { CandidateResultsTable } from '../components/CandidateResultsTable';
+import { DatabaseLoader } from '../components/DatabaseLoader';
 import { CssCandidate } from '../types';
 
 export const CssOptimizer: React.FC = () => {
@@ -260,8 +262,17 @@ export const CssOptimizer: React.FC = () => {
             className="btn btn-primary"
             style={{ width: '100%', marginTop: '12px', padding: '12px' }}
           >
-            <Sparkles size={16} />
-            <span>{isLoading ? 'Searching Response Surface...' : 'Run Cycle Optimization'}</span>
+            {isLoading ? (
+              <>
+                <Loader2 size={16} className="spin" />
+                <span>Searching Response Surface...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} />
+                <span>Run Cycle Optimization</span>
+              </>
+            )}
           </button>
         </div>
 
@@ -337,11 +348,19 @@ export const CssOptimizer: React.FC = () => {
               </span>
             </div>
 
-            <CandidateResultsTable
-              candidates={candidates}
-              onPlan={handlePlanCycle}
-              isPlanning={isPlanning}
-            />
+            {isLoading ? (
+              <DatabaseLoader
+                variant="panel"
+                message="Calculating thermal cycle response surface..."
+                submessage="Searching non-linear steam volume and soak time parameters from reservoir models..."
+              />
+            ) : (
+              <CandidateResultsTable
+                candidates={candidates}
+                onPlan={handlePlanCycle}
+                isPlanning={isPlanning}
+              />
+            )}
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, CheckCircle, ShieldAlert, Filter, RefreshCw, Check } from 'lucide-react';
 import { alertsApi } from '../api/client';
 import { Alert } from '../types';
+import { DatabaseLoader } from '../components/DatabaseLoader';
 
 export const Alerts: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -50,10 +51,15 @@ export const Alerts: React.FC = () => {
           </p>
         </div>
 
-        <button onClick={fetchAlerts} className="btn btn-secondary btn-sm">
-          <RefreshCw size={13} className={isLoading ? 'spin' : ''} />
-          <span>Refresh Feed</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {isLoading && (
+            <DatabaseLoader variant="inline" message="Syncing alerts..." />
+          )}
+          <button onClick={fetchAlerts} className="btn btn-secondary btn-sm" title="Refresh Feed">
+            <RefreshCw size={13} className={isLoading ? 'spin' : ''} />
+            <span>Refresh Feed</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -123,7 +129,17 @@ export const Alerts: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {alerts.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} style={{ padding: '40px 0' }}>
+                    <DatabaseLoader
+                      variant="panel"
+                      message="Querying surveillance alerts database..."
+                      submessage="Filtering real-time operational events, rod load overstress alarms, and anomaly reports..."
+                    />
+                  </td>
+                </tr>
+              ) : alerts.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-secondary)' }}>
                     No active alerts matching filter. All monitored wells within normal operational envelopes.

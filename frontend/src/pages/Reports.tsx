@@ -11,6 +11,7 @@ import {
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { reportsApi } from '../api/client';
 import { FieldSummary } from '../types';
+import { DatabaseLoader } from '../components/DatabaseLoader';
 
 export const Reports: React.FC = () => {
   const [summary, setSummary] = useState<FieldSummary | null>(null);
@@ -41,6 +42,16 @@ export const Reports: React.FC = () => {
     reportsApi.downloadReport('csv', periodDays);
   };
 
+  if (isLoading && !summary) {
+    return (
+      <DatabaseLoader
+        variant="full"
+        message="Compiling field report from database..."
+        submessage={`Aggregating ${periodDays}-day SOR trends, lifting energy consumption, and well reliability metrics...`}
+      />
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Title & Export Controls */}
@@ -54,7 +65,10 @@ export const Reports: React.FC = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {isLoading && (
+            <DatabaseLoader variant="inline" message="Syncing metrics..." />
+          )}
           <select
             value={periodDays}
             onChange={(e) => setPeriodDays(Number(e.target.value))}

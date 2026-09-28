@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../state/authStore';
+import { useLoadingStore } from '../state/loadingStore';
 import {
   AuthResponse,
   WellListResponse,
@@ -30,19 +31,30 @@ export const apiClient = axios.create({
   },
 });
 
-// Request interceptor to attach bearer token
-apiClient.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Request interceptor to attach bearer token and notify global loading store
+apiClient.interceptors.request.use(
+  (config) => {
+    useLoadingStore.getState().startRequest();
+    const token = useAuthStore.getState().accessToken;
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    useLoadingStore.getState().endRequest();
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
-// Response interceptor to handle token refresh
+// Response interceptor to handle token refresh and loading status
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    useLoadingStore.getState().endRequest();
+    return response;
+  },
   async (error) => {
+    useLoadingStore.getState().endRequest();
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;

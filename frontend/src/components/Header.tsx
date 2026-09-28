@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Radio, Zap, ExternalLink } from 'lucide-react';
+import { Database, Loader2, Zap } from 'lucide-react';
 import { useAuthStore } from '../state/authStore';
+import { useLoadingStore } from '../state/loadingStore';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { isLoading, activeRequests } = useLoadingStore();
 
   return (
     <header className="top-navbar">
@@ -23,6 +25,27 @@ export const Header: React.FC = () => {
           <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
             Telemetry Live
           </span>
+        </div>
+
+        <div style={{ height: '14px', width: '1px', backgroundColor: 'var(--border)' }} />
+
+        {/* Database Status Indicator */}
+        <div
+          className={`db-sync-badge ${isLoading ? 'active' : 'idle'}`}
+          title={isLoading ? `Database queries in progress (${activeRequests} active)` : 'Connected to PostgreSQL database'}
+        >
+          <Database size={13} className="db-icon" />
+          {isLoading ? (
+            <>
+              <Loader2 size={12} className="spin" />
+              <span>Fetching from DB...</span>
+            </>
+          ) : (
+            <>
+              <span className="db-dot-synced" />
+              <span>DB Connected</span>
+            </>
+          )}
         </div>
 
         <div style={{ height: '14px', width: '1px', backgroundColor: 'var(--border)' }} />

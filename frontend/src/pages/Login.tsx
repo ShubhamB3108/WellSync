@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Cpu, Lock, Mail, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { Cpu, Lock, Mail, ArrowRight, ShieldCheck, Zap, Loader2 } from 'lucide-react';
 import { authApi } from '../api/client';
 import { useAuthStore } from '../state/authStore';
 
@@ -142,10 +142,19 @@ export const Login: React.FC = () => {
             type="submit"
             disabled={isLoading}
             className="btn btn-primary"
-            style={{ width: '100%', padding: '12px', marginTop: '6px', fontSize: '14px', fontWeight: 600 }}
+            style={{ width: '100%', padding: '12px', marginTop: '6px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
-            {isLoading ? 'Authenticating...' : 'Sign In to WellSync'}
-            {!isLoading && <ArrowRight size={16} />}
+            {isLoading ? (
+              <>
+                <Loader2 size={16} className="spin" />
+                <span>Authenticating with Database...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign In to WellSync</span>
+                <ArrowRight size={16} />
+              </>
+            )}
           </button>
         </form>
 

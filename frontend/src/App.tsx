@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './state/authStore';
+import { useLoadingStore } from './state/loadingStore';
 import { alertsApi } from './api/client';
 
 import { Login } from './pages/Login';
@@ -27,6 +28,7 @@ const queryClient = new QueryClient({
 
 const ProtectedLayout: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
+  const { isLoading: isDbLoading } = useLoadingStore();
   const [unreadAlerts, setUnreadAlerts] = useState<number>(0);
 
   const fetchAlertCount = async () => {
@@ -52,6 +54,7 @@ const ProtectedLayout: React.FC = () => {
 
   return (
     <div className="app-container">
+      {isDbLoading && <div className="top-loading-bar" />}
       <Sidebar alertCount={unreadAlerts} />
       <div className="main-content">
         <Header />
