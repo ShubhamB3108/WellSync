@@ -26,7 +26,7 @@ services:
   # WellSync React Frontend (Static Site)
   # ----------------------------------------------------------------------------
   - type: web
-    name: wellsync-frontend
+    name: wellsync-sih
     runtime: static
     rootDir: frontend
     buildCommand: "npm install && npm run build"
