@@ -17,6 +17,8 @@ import { RiskScoreCard } from '../components/RiskScoreCard';
 import { RecommendationList } from '../components/RecommendationList';
 import { DatabaseLoader } from '../components/DatabaseLoader';
 
+const POLLING_INTERVAL_MS = 60000; // 60s background telemetry refresh
+
 export const WellDetail: React.FC = () => {
   const { wellId } = useParams<{ wellId: string }>();
   const navigate = useNavigate();
@@ -24,25 +26,31 @@ export const WellDetail: React.FC = () => {
   const [latestCard, setLatestCard] = useState<DynoCard | null>(null);
   const [actualWellId, setActualWellId] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isOptimizingSrp, setIsOptimizingSrp] = useState<boolean>(false);
 
-  const loadWellState = async () => {
+  const loadWellState = async (isBackground = false) => {
     try {
-      setIsLoading(true);
+      if (!isBackground) {
+        if (!twinState) setIsLoading(true);
+        else setIsRefreshing(true);
+      }
       // Resolve wellId if name was passed (e.g. BGW-003)
-      let targetId = wellId || 'BGW-003';
-      const wellsRes = await wellsApi.list(1, 50);
-      const match = wellsRes.items.find(
-        (w: any) => w.name.toLowerCase() === targetId.toLowerCase() || w.id === targetId
-      );
-      if (match) {
-        targetId = match.id;
-        setActualWellId(targetId);
+      let targetId = actualWellId || wellId || 'BGW-003';
+      if (!actualWellId) {
+        const wellsRes = await wellsApi.list(1, 50, undefined, isBackground);
+        const match = wellsRes.items.find(
+          (w: any) => w.name.toLowerCase() === targetId.toLowerCase() || w.id === targetId
+        );
+        if (match) {
+          targetId = match.id;
+          setActualWellId(targetId);
+        }
       }
 
       const [state, cards] = await Promise.all([
-        wellsApi.getState(targetId),
-        srpApi.getDynoCards(targetId, 1),
+        wellsApi.getState(targetId, isBackground),
+        srpApi.getDynoCards(targetId, 1, isBackground),
       ]);
       setTwinState(state);
       if (cards && cards.length > 0) {
@@ -51,13 +59,17 @@ export const WellDetail: React.FC = () => {
     } catch (err) {
       console.error('Error loading well digital twin state:', err);
     } finally {
-      setIsLoading(false);
+      if (!isBackground) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
   };
 
   useEffect(() => {
-    loadWellState();
-    const interval = setInterval(loadWellState, 15000);
+    setActualWellId('');
+    loadWellState(false);
+    const interval = setInterval(() => loadWellState(true), POLLING_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [wellId]);
 
@@ -146,8 +158,8 @@ export const WellDetail: React.FC = () => {
             <Activity size={14} color="var(--accent-blue)" />
             <span>SRP Diagnostics</span>
           </button>
-          <button onClick={loadWellState} className="btn btn-secondary btn-sm" title="Refresh Telemetry">
-            <RefreshCw size={14} className={isLoading ? 'spin' : ''} />
+          <button onClick={() => loadWellState(false)} className="btn btn-secondary btn-sm" title="Refresh Telemetry">
+            <RefreshCw size={14} className={isRefreshing ? 'spin' : ''} />
           </button>
         </div>
       </div>

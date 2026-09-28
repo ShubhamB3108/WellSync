@@ -29,15 +29,17 @@ const queryClient = new QueryClient({
   },
 });
 
+const ALERT_POLL_INTERVAL_MS = 60000; // 60s background alert count check
+
 const ProtectedLayout: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
   const { isLoading: isDbLoading } = useLoadingStore();
   const { openGuide } = useGuideStore();
   const [unreadAlerts, setUnreadAlerts] = useState<number>(0);
 
-  const fetchAlertCount = async () => {
+  const fetchAlertCount = async (silent = true) => {
     try {
-      const res = await alertsApi.list(1, 1, undefined, false);
+      const res = await alertsApi.list(1, 1, undefined, false, silent);
       setUnreadAlerts(res.total);
     } catch (e) {
       // ignore transient network errors
@@ -46,8 +48,8 @@ const ProtectedLayout: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchAlertCount();
-      const interval = setInterval(fetchAlertCount, 15000);
+      fetchAlertCount(false);
+      const interval = setInterval(() => fetchAlertCount(true), ALERT_POLL_INTERVAL_MS);
       return () => clearInterval(interval);
     }
   }, [isAuthenticated]);

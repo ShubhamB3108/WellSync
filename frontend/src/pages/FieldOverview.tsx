@@ -15,31 +15,43 @@ import { DatabaseLoader } from '../components/DatabaseLoader';
 import { wellsApi, reportsApi } from '../api/client';
 import { WellSummary, FieldSummary } from '../types';
 
+const POLLING_INTERVAL_MS = 60000; // 60s background telemetry refresh
+
 export const FieldOverview: React.FC = () => {
   const navigate = useNavigate();
   const [wells, setWells] = useState<WellSummary[]>([]);
   const [summary, setSummary] = useState<FieldSummary | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
-  const fetchData = async () => {
+  const fetchData = async (isBackground = false) => {
     try {
-      setIsLoading(true);
+      if (!isBackground) {
+        if (wells.length === 0) {
+          setIsLoading(true);
+        } else {
+          setIsRefreshing(true);
+        }
+      }
       const [wellsRes, summaryRes] = await Promise.all([
-        wellsApi.list(1, 50),
-        reportsApi.getFieldSummary(90)
+        wellsApi.list(1, 50, undefined, isBackground),
+        reportsApi.getFieldSummary(90, isBackground)
       ]);
       setWells(wellsRes.items);
       setSummary(summaryRes);
     } catch (err) {
       console.error('Error fetching field overview data:', err);
     } finally {
-      setIsLoading(false);
+      if (!isBackground) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 15000); // 15s refresh matching backend debounce
+    fetchData(false);
+    const interval = setInterval(() => fetchData(true), POLLING_INTERVAL_MS);
     return () => clearInterval(interval);
   }, []);
 
@@ -66,8 +78,8 @@ export const FieldOverview: React.FC = () => {
           </p>
         </div>
 
-        <button onClick={fetchData} className="btn btn-secondary btn-sm" title="Refresh Telemetry">
-          <RefreshCw size={13} className={isLoading ? 'spin' : ''} />
+        <button onClick={() => fetchData(false)} className="btn btn-secondary btn-sm" title="Refresh Telemetry">
+          <RefreshCw size={13} className={isRefreshing ? 'spin' : ''} />
           <span>Refresh</span>
         </button>
       </div>

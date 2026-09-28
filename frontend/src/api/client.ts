@@ -34,7 +34,10 @@ export const apiClient = axios.create({
 // Request interceptor to attach bearer token and notify global loading store
 apiClient.interceptors.request.use(
   (config) => {
-    useLoadingStore.getState().startRequest();
+    const isSilent = config.headers?.['x-silent'] === 'true' || Boolean((config as any).silent);
+    if (!isSilent) {
+      useLoadingStore.getState().startRequest();
+    }
     const token = useAuthStore.getState().accessToken;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -42,7 +45,10 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    useLoadingStore.getState().endRequest();
+    const isSilent = error.config?.headers?.['x-silent'] === 'true' || Boolean(error.config?.silent);
+    if (!isSilent) {
+      useLoadingStore.getState().endRequest();
+    }
     return Promise.reject(error);
   }
 );
@@ -50,11 +56,17 @@ apiClient.interceptors.request.use(
 // Response interceptor to handle token refresh and loading status
 apiClient.interceptors.response.use(
   (response) => {
-    useLoadingStore.getState().endRequest();
+    const isSilent = response.config?.headers?.['x-silent'] === 'true' || Boolean((response.config as any).silent);
+    if (!isSilent) {
+      useLoadingStore.getState().endRequest();
+    }
     return response;
   },
   async (error) => {
-    useLoadingStore.getState().endRequest();
+    const isSilent = error.config?.headers?.['x-silent'] === 'true' || Boolean(error.config?.silent);
+    if (!isSilent) {
+      useLoadingStore.getState().endRequest();
+    }
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -96,14 +108,18 @@ export const authApi = {
 };
 
 export const wellsApi = {
-  list: async (page = 1, pageSize = 25, status?: string): Promise<WellListResponse> => {
+  list: async (page = 1, pageSize = 25, status?: string, silent = false): Promise<WellListResponse> => {
     const params: any = { page, page_size: pageSize };
     if (status) params.status = status;
-    const res = await apiClient.get<WellListResponse>('/wells', { params });
+    const headers: Record<string, string> = {};
+    if (silent) headers['x-silent'] = 'true';
+    const res = await apiClient.get<WellListResponse>('/wells', { params, headers });
     return res.data;
   },
-  getState: async (wellId: string): Promise<DigitalTwinState> => {
-    const res = await apiClient.get<DigitalTwinState>(`/wells/${wellId}/state`);
+  getState: async (wellId: string, silent = false): Promise<DigitalTwinState> => {
+    const headers: Record<string, string> = {};
+    if (silent) headers['x-silent'] = 'true';
+    const res = await apiClient.get<DigitalTwinState>(`/wells/${wellId}/state`, { headers });
     return res.data;
   },
 };
@@ -140,9 +156,12 @@ export const cssApi = {
 };
 
 export const srpApi = {
-  getDynoCards: async (wellId: string, limit = 10): Promise<DynoCard[]> => {
+  getDynoCards: async (wellId: string, limit = 10, silent = false): Promise<DynoCard[]> => {
+    const headers: Record<string, string> = {};
+    if (silent) headers['x-silent'] = 'true';
     const res = await apiClient.get<DynoCard[]>(`/srp/dyno-cards/${wellId}`, {
       params: { limit },
+      headers,
     });
     return res.data;
   },
@@ -166,11 +185,13 @@ export const optimizationApi = {
 };
 
 export const alertsApi = {
-  list: async (page = 1, pageSize = 25, severity?: string, acknowledged?: boolean): Promise<AlertListResponse> => {
+  list: async (page = 1, pageSize = 25, severity?: string, acknowledged?: boolean, silent = false): Promise<AlertListResponse> => {
     const params: any = { page, page_size: pageSize };
     if (severity) params.severity = severity;
     if (acknowledged !== undefined) params.acknowledged = acknowledged;
-    const res = await apiClient.get<AlertListResponse>('/alerts', { params });
+    const headers: Record<string, string> = {};
+    if (silent) headers['x-silent'] = 'true';
+    const res = await apiClient.get<AlertListResponse>('/alerts', { params, headers });
     return res.data;
   },
   acknowledge: async (alertId: string): Promise<Alert> => {
@@ -180,9 +201,12 @@ export const alertsApi = {
 };
 
 export const reportsApi = {
-  getFieldSummary: async (periodDays = 90): Promise<FieldSummary> => {
+  getFieldSummary: async (periodDays = 90, silent = false): Promise<FieldSummary> => {
+    const headers: Record<string, string> = {};
+    if (silent) headers['x-silent'] = 'true';
     const res = await apiClient.get<FieldSummary>('/reports/field-summary', {
       params: { format: 'json', period_days: periodDays },
+      headers,
     });
     return res.data;
   },
