@@ -17,8 +17,6 @@ import { Admin } from './pages/Admin';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { NavigationGuideModal } from './components/NavigationGuideModal';
-import { useGuideStore } from './state/guideStore';
-import { BookOpen } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,7 +32,6 @@ const ALERT_POLL_INTERVAL_MS = 60000; // 60s background alert count check
 const ProtectedLayout: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
   const { isLoading: isDbLoading } = useLoadingStore();
-  const { openGuide } = useGuideStore();
   const [unreadAlerts, setUnreadAlerts] = useState<number>(0);
 
   const fetchAlertCount = async (silent = true) => {
@@ -68,16 +65,6 @@ const ProtectedLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
-
-      {/* Permanent Floating Quick-Access Guide Button */}
-      <button
-        onClick={openGuide}
-        className="floating-guide-btn"
-        title="Open Evaluator Guide & 7-Minute Walkthrough"
-      >
-        <BookOpen size={16} />
-        <span>Evaluator Guide</span>
-      </button>
     </div>
   );
 };
