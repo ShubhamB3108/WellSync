@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Cpu, Lock, Mail, ArrowRight, ShieldCheck, Zap, Loader2, BookOpen } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldCheck, Zap, Loader2, BookOpen } from 'lucide-react';
 import { authApi } from '../api/client';
 import { useAuthStore } from '../state/authStore';
 import { useGuideStore } from '../state/guideStore';
@@ -68,17 +68,24 @@ export const Login: React.FC = () => {
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)',
+            width: '60px',
+            height: '60px',
+            borderRadius: '14px',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: '16px',
-            boxShadow: '0 4px 16px rgba(59, 130, 246, 0.4)'
+            backgroundColor: '#0F1419',
+            boxShadow: '0 4px 20px rgba(59, 130, 246, 0.35)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            overflow: 'hidden',
+            padding: '6px'
           }}>
-            <Cpu size={28} color="#FFFFFF" />
+            <img
+              src="/logo.svg"
+              alt="WellSync Logo"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
           </div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: '4px' }}>
             WellSync

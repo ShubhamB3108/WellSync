@@ -9,7 +9,6 @@ import {
   FileText,
   Shield,
   LogOut,
-  Cpu,
   BookOpen
 } from 'lucide-react';
 import { useAuthStore } from '../state/authStore';
@@ -47,18 +46,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ alertCount = 0 }) => {
     <aside className="sidebar">
       {/* Brand Header */}
       <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <NavLink
+          to="/"
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}
+          title="WellSync — Return to Field Overview"
+        >
           <div style={{
-            width: '34px',
-            height: '34px',
+            width: '36px',
+            height: '36px',
             borderRadius: '8px',
-            background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)',
+            overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 10px rgba(59, 130, 246, 0.4)'
+            boxShadow: '0 2px 10px rgba(59, 130, 246, 0.35)',
+            border: '1px solid rgba(59, 130, 246, 0.25)',
+            backgroundColor: '#0F1419',
+            flexShrink: 0
           }}>
-            <Cpu size={20} color="#FFFFFF" />
+            <img
+              src="/logo.svg"
+              alt="WellSync Logo"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
           </div>
           <div>
             <div style={{ fontSize: '16px', fontWeight: '700', letterSpacing: '-0.02em', color: '#FFFFFF' }}>
@@ -68,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ alertCount = 0 }) => {
               OIL Baghewala Twin
             </div>
           </div>
-        </div>
+        </NavLink>
       </div>
 
       {/* Navigation Links */}

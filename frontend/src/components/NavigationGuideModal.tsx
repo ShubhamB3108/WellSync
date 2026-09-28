@@ -64,8 +64,8 @@ export const NavigationGuideModal: React.FC<NavigationGuideModalProps> = ({
         {/* Modal Top Header */}
         <div className="guide-modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div className="guide-badge-icon">
-              <Award size={22} color="#FBBF24" />
+            <div className="guide-badge-icon" style={{ padding: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src="/logo.svg" alt="WellSync" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
