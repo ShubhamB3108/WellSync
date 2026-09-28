@@ -1,11 +1,30 @@
 services:
   # ----------------------------------------------------------------------------
+  # WellSync React Frontend (Static Site) — Branch Preview
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: wellsync-branch
+    runtime: static
+    rootDir: frontend
+    branch: feature/frontend-improvements
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://wellsync-backend-m8a8.onrender.com/api/v1
+
+  # ----------------------------------------------------------------------------
   # WellSync FastAPI Backend Web Service
   # ----------------------------------------------------------------------------
   - type: web
     name: wellsync-backend
     runtime: python
     rootDir: backend
+    branch: feature/frontend-improvements
     plan: free
     buildCommand: "pip install -r requirements.txt && python ml/train_dyno_classifier.py"
     startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
@@ -22,19 +41,3 @@ services:
       - key: PYTHON_VERSION
         value: "3.11.9"
 
-  # ----------------------------------------------------------------------------
-  # WellSync React Frontend (Static Site)
-  # ----------------------------------------------------------------------------
-  - type: web
-    name: wellsync-sih
-    runtime: static
-    rootDir: frontend
-    buildCommand: "npm install && npm run build"
-    staticPublishPath: ./dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_URL
-        value: https://wellsync-backend-m8a8.onrender.com/api/v1
