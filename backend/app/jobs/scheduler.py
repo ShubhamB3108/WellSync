@@ -5,6 +5,7 @@ from app.ingestion.simulator import run_simulator_tick
 from app.models.well import Well
 from app.models.alert import Alert
 from app.services.rod_failure_risk import calculate_rod_failure_risk
+from app.jobs.keep_alive import execute_keepalive_ping
 
 scheduler = BackgroundScheduler()
 
@@ -57,14 +58,25 @@ def scheduled_simulator_tick():
         db.close()
 
 def start_scheduler():
-    if settings.SIMULATOR_ENABLED and not scheduler.running:
-        scheduler.add_job(
-            scheduled_simulator_tick,
-            "interval",
-            seconds=settings.SIMULATOR_TICK_SECONDS,
-            id="simulator_tick",
-            replace_existing=True
-        )
+    if not scheduler.running:
+        if settings.SIMULATOR_ENABLED:
+            scheduler.add_job(
+                scheduled_simulator_tick,
+                "interval",
+                seconds=settings.SIMULATOR_TICK_SECONDS,
+                id="simulator_tick",
+                replace_existing=True
+            )
+        if settings.KEEP_ALIVE_ENABLED and settings.RENDER_EXTERNAL_URL:
+            scheduler.add_job(
+                execute_keepalive_ping,
+                "interval",
+                minutes=settings.KEEP_ALIVE_INTERVAL_MINUTES,
+                id="render_keepalive_ping",
+                replace_existing=True
+            )
+            print(f"Render keepalive ping scheduled every {settings.KEEP_ALIVE_INTERVAL_MINUTES}m to {settings.RENDER_EXTERNAL_URL}")
+        
         scheduler.start()
         print("APScheduler background tasks started.")
 

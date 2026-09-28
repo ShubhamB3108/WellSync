@@ -51,6 +51,14 @@ class Settings:
     
     # ML Models path
     DYNO_MODEL_PATH: str = os.getenv("DYNO_MODEL_PATH", _DEFAULT_MODEL_PATH)
+    
+    # Render Keep-Alive & Monitoring (prevents free-tier 15-min idle spin-down)
+    RENDER_EXTERNAL_URL: str = os.getenv(
+        "RENDER_EXTERNAL_URL",
+        os.getenv("BACKEND_PUBLIC_URL", "https://wellsync-backend.onrender.com")
+    ).rstrip("/")
+    KEEP_ALIVE_ENABLED: bool = os.getenv("KEEP_ALIVE_ENABLED", "true").lower() == "true"
+    KEEP_ALIVE_INTERVAL_MINUTES: int = int(os.getenv("KEEP_ALIVE_INTERVAL_MINUTES", "10"))
 
 settings = Settings()
 

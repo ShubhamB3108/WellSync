@@ -251,3 +251,36 @@ docker compose exec -t db pg_dump -U wellsync wellsync > wellsync_backup_$(date 
 ```bash
 cat wellsync_backup_2026-09-28.sql | docker compose exec -T db psql -U wellsync -d wellsync
 ```
+
+---
+
+## 🌐 Render Cloud Deployment & Domain Monitor (domain-monitor.io)
+
+Render free-tier web services spin down after **15 minutes** of inactivity. To ensure zero cold-start delay for evaluators, judges, and operators, WellSync is integrated with **Domain Monitor** ([domain-monitor.io](https://domain-monitor.io/)).
+
+### 1. The 15-Minute Render Idle Problem
+When a free instance receives no inbound HTTP traffic for 15 minutes, Render spins down the container. The next user who opens the app experiences a 30–60 second cold-start delay while the container boots up.
+
+### 2. Solution: Integrating Domain Monitor (domain-monitor.io)
+Domain Monitor performs free, continuous external uptime and ping monitoring. Every periodic probe routes through Render's external ingress router, resetting Render's 15-minute countdown and keeping the backend permanently active.
+
+#### Step-by-Step Setup:
+1. Go to [https://domain-monitor.io/](https://domain-monitor.io/) and create a free account (or log in).
+2. Click **"Add Monitor"** or navigate to **"Uptime Monitoring"**.
+3. Configure the monitor:
+   - **Monitor Type**: `HTTP(s)` / `Uptime Monitoring`
+   - **Friendly Name**: `WellSync Backend`
+   - **URL to Monitor**: `https://wellsync-backend.onrender.com/health`
+     *(Alternative endpoint: `https://wellsync-backend.onrender.com/api/v1/uptime/ping`)*
+   - **Check Interval**: `5 minutes` *(must be less than Render's 15-minute timeout)*
+   - **HTTP Method**: `GET` or `HEAD`
+   - **Accepted Status Code**: `200 OK`
+4. Save the monitor. Domain Monitor will now ping the backend around the clock.
+
+### 3. Multi-Layer Anti-Sleep Defense Architecture
+WellSync implements a 4-layer defense against Render idle timeouts:
+1. **Domain Monitor ([domain-monitor.io](https://domain-monitor.io/))**: External cloud probe pinging `/health` every 5 minutes.
+2. **GitHub Actions Workflow** ([`.github/workflows/domain-monitor-keepalive.yml`](file:///d:/wellSync/.github/workflows/domain-monitor-keepalive.yml)): Scheduled cron running `curl` every 10 minutes.
+3. **APScheduler Internal Worker** ([`backend/app/jobs/keep_alive.py`](file:///d:/wellSync/backend/app/jobs/keep_alive.py)): Outbound self-ping every 10 minutes through Render's external router.
+4. **Browser Dashboard Keeper** ([`frontend/src/App.tsx`](file:///d:/wellSync/frontend/src/App.tsx)): Silently pings `/api/v1/uptime/ping` every 5 minutes while the dashboard is open in any browser tab.
+
