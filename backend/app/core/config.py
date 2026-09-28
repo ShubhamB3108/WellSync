@@ -22,13 +22,18 @@ class Settings:
     SIMULATOR_ENABLED: bool = os.getenv("SIMULATOR_ENABLED", "true").lower() == "true"
     
     # CORS
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-        "*"
-    ]
+    _cors_raw: str = os.getenv("CORS_ORIGINS", "")
+    CORS_ORIGINS: List[str] = (
+        [x.strip() for x in _cors_raw.split(",") if x.strip()]
+        if _cors_raw
+        else [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:3000",
+            "*"
+        ]
+    )
     
     # ML Models path
     DYNO_MODEL_PATH: str = os.getenv("DYNO_MODEL_PATH", _DEFAULT_MODEL_PATH)
