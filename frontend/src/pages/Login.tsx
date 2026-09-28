@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Cpu, Lock, Mail, ArrowRight, ShieldCheck, Zap, Loader2 } from 'lucide-react';
+import { Cpu, Lock, Mail, ArrowRight, ShieldCheck, Zap, Loader2, BookOpen } from 'lucide-react';
 import { authApi } from '../api/client';
 import { useAuthStore } from '../state/authStore';
+import { useGuideStore } from '../state/guideStore';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
+  const { openGuide } = useGuideStore();
   const [email, setEmail] = useState('field@wellsync.demo');
   const [password, setPassword] = useState('wellsync123');
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +86,18 @@ export const Login: React.FC = () => {
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
             AI-Enabled Well-to-Surface Digital Twin | Baghewala Field
           </p>
+
+          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+            <button
+              type="button"
+              onClick={openGuide}
+              className="btn-guide"
+              title="Open SIH Judge & Evaluator Guide"
+            >
+              <BookOpen size={14} />
+              <span>📖 Evaluator Guide & 7-Min Demo Walkthrough</span>
+            </button>
+          </div>
         </div>
 
         {errorMsg && (

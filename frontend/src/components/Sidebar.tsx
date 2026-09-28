@@ -9,9 +9,11 @@ import {
   FileText,
   Shield,
   LogOut,
-  Cpu
+  Cpu,
+  BookOpen
 } from 'lucide-react';
 import { useAuthStore } from '../state/authStore';
+import { useGuideStore } from '../state/guideStore';
 
 interface SidebarProps {
   alertCount?: number;
@@ -19,6 +21,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ alertCount = 0 }) => {
   const { user, logout } = useAuthStore();
+  const { openGuide } = useGuideStore();
 
   const navItems = [
     { to: '/', label: 'Field Overview', icon: LayoutDashboard },
@@ -113,6 +116,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ alertCount = 0 }) => {
           );
         })}
       </nav>
+
+      {/* Evaluator Guide Button */}
+      <div style={{ padding: '0 12px 14px' }}>
+        <button
+          onClick={openGuide}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '9px 12px',
+            borderRadius: '6px',
+            backgroundColor: 'rgba(245, 158, 11, 0.12)',
+            border: '1px solid rgba(245, 158, 11, 0.4)',
+            color: '#FBBF24',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+          title="Open SIH Judge & Evaluator Guide"
+        >
+          <BookOpen size={15} />
+          <span>Evaluator Guide</span>
+        </button>
+      </div>
 
       {/* User Info & Role Footer */}
       <div style={{

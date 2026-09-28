@@ -1,13 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Database, Loader2, Zap } from 'lucide-react';
+import { Database, Loader2, Zap, BookOpen } from 'lucide-react';
 import { useAuthStore } from '../state/authStore';
 import { useLoadingStore } from '../state/loadingStore';
+import { useGuideStore } from '../state/guideStore';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { isLoading, activeRequests } = useLoadingStore();
+  const { openGuide } = useGuideStore();
 
   return (
     <header className="top-navbar">
@@ -57,6 +59,16 @@ export const Header: React.FC = () => {
 
       {/* Demo Action Bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Permanent Evaluator Guide Button */}
+        <button
+          onClick={openGuide}
+          className="btn-guide"
+          title="Open SIH Judge & Evaluator Navigation Guide"
+        >
+          <BookOpen size={14} />
+          <span>Evaluator Guide</span>
+        </button>
+
         {/* Shortcut button for Hackathon 7-minute demo flow */}
         <button
           onClick={() => navigate('/wells/BGW-003')}
