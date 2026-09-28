@@ -14,7 +14,14 @@ import {
   User
 } from '../types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+let rawUrl = (import.meta.env.VITE_API_URL || '/api/v1').trim();
+if (rawUrl.endsWith('/')) {
+  rawUrl = rawUrl.slice(0, -1);
+}
+if (!rawUrl.endsWith('/api/v1')) {
+  rawUrl = `${rawUrl}/api/v1`;
+}
+const BASE_URL = rawUrl;
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
