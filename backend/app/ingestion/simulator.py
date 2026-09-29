@@ -240,32 +240,66 @@ def run_simulator_tick(db: Session):
     Executes one background simulation tick across active wells.
     Generates new SRP reading and updates latest dyno card.
     """
+    from app.models.optimization import OptimizationRun
     wells = db.query(Well).filter(Well.status == "active").all()
     now = datetime.now(timezone.utc)
     
     for well in wells:
-        latest_card = well.dyno_cards[0] if well.dyno_cards else None
-        current_class = latest_card.classification if latest_card else "normal"
-        
+        # Determine target SPM:
+        # Check if an approved SRP optimization run exists for this well
+        approved_run = (
+            db.query(OptimizationRun)
+            .filter(
+                OptimizationRun.well_id == well.id,
+                OptimizationRun.run_type == "srp",
+                OptimizationRun.status == "approved"
+            )
+            .order_by(OptimizationRun.decided_at.desc())
+            .first()
+        )
+        if approved_run:
+            try:
+                rec_params = json.loads(approved_run.recommended_params_json or "{}")
+                target_spm = float(rec_params.get("recommended_spm", 4.8))
+            except Exception:
+                target_spm = 4.8
+        else:
+            if well.name == "BGW-003":
+                target_spm = 6.8  # Unmitigated fluid pound demo well
+            elif well.name == "BGW-004":
+                target_spm = 5.2
+            elif well.name == "BGW-002":
+                target_spm = 6.0
+            else:
+                target_spm = 5.8
+
+        # Realistic small fluctuation around target SPM (within +/- 0.1 SPM)
+        spm = round(target_spm + random.uniform(-0.1, 0.1), 1)
+
         # BGW-003 stays in fluid pound unless speed has been reduced
-        latest_reading = well.srp_readings[0] if well.srp_readings else None
-        spm = latest_reading.spm if latest_reading else 6.0
-        
         if well.name == "BGW-003" and spm > 5.2:
             card_type = "fluid_pound"
+            pprl = 18200.0 + random.uniform(-200, 200)
+            mprl = 3800.0 + random.uniform(-100, 100)
         elif well.name == "BGW-003" and spm <= 5.2:
             card_type = "normal"  # mitigated!
+            pprl = 16200.0 + random.uniform(-200, 200)
+            mprl = 4400.0 + random.uniform(-100, 100)
         elif well.name == "BGW-004":
             card_type = "gas_interference"
+            pprl = 15200.0 + random.uniform(-200, 200)
+            mprl = 4800.0 + random.uniform(-100, 100)
         else:
             card_type = "normal"
+            pprl = 16500.0 + random.uniform(-300, 300)
+            mprl = 4500.0 + random.uniform(-200, 200)
             
         stroke_length = 86.0
         points = generate_dyno_card_points(
             card_type=card_type,
             stroke_length_in=stroke_length,
-            pprl_lbf=16500.0 + random.uniform(-300, 300),
-            mprl_lbf=4500.0 + random.uniform(-200, 200)
+            pprl_lbf=pprl,
+            mprl_lbf=mprl
         )
         pred_class, conf, feats = classify_dyno_card(points)
         
@@ -285,7 +319,7 @@ def run_simulator_tick(db: Session):
         reading = SrpReading(
             well_id=well.id,
             reading_time=now,
-            spm=spm + round(random.uniform(-0.1, 0.1), 1),
+            spm=spm,
             stroke_length_in=stroke_length,
             vfd_frequency_hz=round(spm * 8.0, 1),
             polished_rod_load_lbf=feats["pprl_lbf"],
@@ -303,24 +337,126 @@ def prune_old_simulation_data(db: Session, max_per_well: int = 50):
     the latest max_per_well records per well.
     """
     try:
-        from sqlalchemy import text
-        db.execute(text("""
-            DELETE FROM dyno_cards WHERE id IN (
-                SELECT id FROM (
-                    SELECT id, ROW_NUMBER() OVER (PARTITION BY well_id ORDER BY card_time DESC) as rn
-                    FROM dyno_cards
-                ) t WHERE t.rn > :max_per_well
-            );
-        """), {"max_per_well": max_per_well})
-        db.execute(text("""
-            DELETE FROM srp_readings WHERE id IN (
-                SELECT id FROM (
-                    SELECT id, ROW_NUMBER() OVER (PARTITION BY well_id ORDER BY reading_time DESC) as rn
-                    FROM srp_readings
-                ) t WHERE t.rn > :max_per_well
-            );
-        """), {"max_per_well": max_per_well})
+        wells = db.query(Well.id).all()
+        for (w_id,) in wells:
+            subquery = (
+                db.query(DynoCard.id)
+                .filter(DynoCard.well_id == w_id)
+                .order_by(DynoCard.card_time.desc())
+                .offset(max_per_well)
+                .all()
+            )
+            if subquery:
+                card_ids_to_del = [row[0] for row in subquery]
+                db.query(DynoCard).filter(DynoCard.id.in_(card_ids_to_del)).delete(synchronize_session=False)
+
+            sub_readings = (
+                db.query(SrpReading.id)
+                .filter(SrpReading.well_id == w_id)
+                .order_by(SrpReading.reading_time.desc())
+                .offset(max_per_well)
+                .all()
+            )
+            if sub_readings:
+                reading_ids_to_del = [row[0] for row in sub_readings]
+                db.query(SrpReading).filter(SrpReading.id.in_(reading_ids_to_del)).delete(synchronize_session=False)
+
         db.commit()
     except Exception:
         db.rollback()
+
+def reset_demo_well(db: Session, well_name: str = "BGW-003") -> Well:
+    """
+    Resets BGW-003 (or specified well) back to pre-mitigation demo state:
+    - SPM: 6.8 (unmitigated high speed)
+    - Latest Dyno Cards: severe fluid pound pattern
+    - Rod failure risk score: ~0.71-0.82 (high risk)
+    - Active unacknowledged critical Alert
+    - Removes previous optimization runs
+    """
+    from app.models.optimization import OptimizationRun
+    well = db.query(Well).filter(Well.name == well_name).first()
+    if not well:
+        raise ValueError(f"Well '{well_name}' not found")
+        
+    now = datetime.now(timezone.utc)
+    
+    # 1. Clean out recent dyno cards and srp readings for this well
+    db.query(DynoCard).filter(DynoCard.well_id == well.id).delete()
+    db.query(SrpReading).filter(SrpReading.well_id == well.id).delete()
+    
+    # 2. Clean out optimization runs for this well so demo starts fresh
+    db.query(OptimizationRun).filter(OptimizationRun.well_id == well.id).delete()
+    
+    # 3. Ensure the 2 historical rod failure events exist to elevate Goodman fatigue risk
+    existing_failures = db.query(RodFailure).filter(RodFailure.well_id == well.id).count()
+    if existing_failures < 2:
+        db.query(RodFailure).filter(RodFailure.well_id == well.id).delete()
+        f1 = RodFailure(
+            well_id=well.id,
+            failure_time=now - timedelta(days=45),
+            failure_type="fatigue",
+            depth_ft=2100.0,
+            downtime_hours=36.0,
+            is_synthetic=True
+        )
+        f2 = RodFailure(
+            well_id=well.id,
+            failure_time=now - timedelta(days=160),
+            failure_type="buckling",
+            depth_ft=2250.0,
+            downtime_hours=48.0,
+            is_synthetic=True
+        )
+        db.add_all([f1, f2])
+        
+    # 4. Generate 3 dyno cards with severe fluid pound signature
+    for i in range(3):
+        card_points = generate_dyno_card_points(
+            card_type="fluid_pound",
+            stroke_length_in=86.0,
+            pprl_lbf=18200.0,
+            mprl_lbf=3800.0
+        )
+        pred_class, conf, feats = classify_dyno_card(card_points)
+        card = DynoCard(
+            well_id=well.id,
+            card_time=now - timedelta(minutes=i * 5),
+            load_position_json=json.dumps(card_points),
+            pprl_lbf=feats["pprl_lbf"],
+            mprl_lbf=feats["mprl_lbf"],
+            card_area=feats["card_area"],
+            classification=pred_class,
+            classification_confidence=conf,
+            is_synthetic=True
+        )
+        db.add(card)
+        
+    # 5. Add initial high-speed reading (6.8 SPM)
+    reading = SrpReading(
+        well_id=well.id,
+        reading_time=now,
+        spm=6.8,
+        stroke_length_in=86.0,
+        vfd_frequency_hz=54.4,
+        polished_rod_load_lbf=18200.0,
+        motor_current_a=24.5,
+        estimated_fluid_level_m=340.0
+    )
+    db.add(reading)
+    
+    # 6. Ensure active unacknowledged critical alert
+    db.query(Alert).filter(Alert.well_id == well.id).delete()
+    alert = Alert(
+        well_id=well.id,
+        alert_type="fluid_pound",
+        severity="critical",
+        message="Fluid pound detected (rod-floating signature, 87% confidence). Immediate SPM reduction recommended to prevent rod fatigue failure."
+    )
+    db.add(alert)
+    
+    db.commit()
+    db.refresh(well)
+    return well
+
 

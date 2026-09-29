@@ -8,7 +8,9 @@ import {
   ArrowRight,
   TrendingDown,
   RefreshCw,
-  Activity
+  Activity,
+  CheckCircle,
+  RotateCcw
 } from 'lucide-react';
 import { KpiTile } from '../components/KpiTile';
 import { DatabaseLoader } from '../components/DatabaseLoader';
@@ -23,6 +25,26 @@ export const FieldOverview: React.FC = () => {
   const [summary, setSummary] = useState<FieldSummary | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [isResettingDemo, setIsResettingDemo] = useState<boolean>(false);
+
+  const bgw003 = wells.find((w) => w.name === 'BGW-003');
+  const isBgw003InAlert = bgw003
+    ? bgw003.latest_classification === 'fluid_pound' ||
+      bgw003.rod_failure_risk_band === 'high' ||
+      bgw003.current_alert_level === 'critical'
+    : true;
+
+  const handleResetDemoWell = async () => {
+    try {
+      setIsResettingDemo(true);
+      await wellsApi.resetDemoWell('BGW-003');
+      await fetchData(false);
+    } catch (err) {
+      console.error('Error resetting demo well BGW-003:', err);
+    } finally {
+      setIsResettingDemo(false);
+    }
+  };
 
   const fetchData = async (isBackground = false) => {
     try {
@@ -84,49 +106,115 @@ export const FieldOverview: React.FC = () => {
         </button>
       </div>
 
-      {/* Demo Callout Banner for SIH Evaluators */}
-      <div style={{
-        padding: '16px 20px',
-        borderRadius: '8px',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        border: '1px solid rgba(239, 68, 68, 0.3)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        animation: 'pulse-critical 3s infinite'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+      {/* Dynamic Demo Callout Banner for SIH Evaluators */}
+      {isBgw003InAlert ? (
+        <div
+          style={{
+            padding: '16px 20px',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--status-critical)'
-          }}>
-            <AlertTriangle size={20} />
+            justifyContent: 'space-between',
+            animation: 'pulse-critical 3s infinite',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--status-critical)',
+              }}
+            >
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Operational Alert on Demo Well BGW-003: Severe Fluid Pound Detected
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Traveling valve floating in empty pump barrel causing mechanical rod impact. High failure risk score (elevated rod parting risk).
+              </div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
-              Operational Alert on Demo Well BGW-003: Severe Fluid Pound Detected
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Traveling valve floating in empty pump barrel causing mechanical rod impact. High failure risk score (0.71).
-            </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => navigate('/wells/BGW-003')}
+              className="btn btn-primary"
+              style={{ backgroundColor: 'var(--status-critical)', borderColor: 'var(--status-critical)' }}
+            >
+              <span>Open Digital Twin</span>
+              <ArrowRight size={14} />
+            </button>
           </div>
         </div>
-
-        <button
-          onClick={() => navigate('/wells/BGW-003')}
-          className="btn btn-primary"
-          style={{ backgroundColor: 'var(--status-critical)', borderColor: 'var(--status-critical)' }}
+      ) : (
+        <div
+          style={{
+            padding: '16px 20px',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
         >
-          <span>Open Digital Twin</span>
-          <ArrowRight size={14} />
-        </button>
-      </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--status-normal)',
+              }}
+            >
+              <CheckCircle size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Demo Well BGW-003: Operating Normally (Fluid Pound Mitigated)
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Sucker rod pump speed optimized via AI setpoint. Traveling valve seated; rod failure risk normalized to Low Risk.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => navigate('/wells/BGW-003')}
+              className="btn btn-secondary btn-sm"
+              title="Inspect Digital Twin"
+            >
+              <span>Inspect Twin State</span>
+              <ArrowRight size={14} />
+            </button>
+            <button
+              onClick={handleResetDemoWell}
+              className="btn btn-secondary btn-sm"
+              disabled={isResettingDemo}
+              title="Reset Demo Well BGW-003 back to pre-mitigated Fluid Pound alert state for presentation"
+              style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: 'var(--status-critical)' }}
+            >
+              <RotateCcw size={13} className={isResettingDemo ? 'spin' : ''} />
+              <span>{isResettingDemo ? 'Resetting...' : 'Reset Demo Alert'}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Top 4 Field-Wide KPI Tiles */}
       <div className="kpi-grid">
@@ -157,9 +245,9 @@ export const FieldOverview: React.FC = () => {
         />
         <KpiTile
           label="High Failure-Risk Wells"
-          value={summary?.high_risk_wells_count || 1}
+          value={summary?.high_risk_wells_count ?? (isBgw003InAlert ? 1 : 0)}
           unit="Elevated"
-          status={summary?.high_risk_wells_count ? 'critical' : 'normal'}
+          status={((summary?.high_risk_wells_count ?? 0) > 0 || isBgw003InAlert) ? 'critical' : 'normal'}
           icon={<Activity size={18} />}
         />
       </div>

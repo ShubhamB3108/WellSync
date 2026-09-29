@@ -122,6 +122,10 @@ export const wellsApi = {
     const res = await apiClient.get<DigitalTwinState>(`/wells/${wellId}/state`, { headers });
     return res.data;
   },
+  resetDemoWell: async (wellIdOrName = 'BGW-003'): Promise<{ success: boolean; message: string; well_name: string }> => {
+    const res = await apiClient.post(`/wells/${wellIdOrName}/reset-demo`);
+    return res.data;
+  },
 };
 
 export const cssApi = {

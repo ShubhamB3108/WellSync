@@ -71,3 +71,24 @@ def get_well_digital_twin_state(
             detail={"code": "WELL_NOT_FOUND", "message": f"Well with id '{well_id}' was not found"}
         )
     return get_digital_twin_state(db, well)
+
+@router.post("/{well_id}/reset-demo")
+def reset_demo_well_endpoint(
+    well_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    well = db.query(Well).filter((Well.id == well_id) | (Well.name == well_id)).first()
+    if not well:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "WELL_NOT_FOUND", "message": f"Well with id or name '{well_id}' was not found"}
+        )
+    from app.ingestion.simulator import reset_demo_well
+    reset_demo_well(db, well.name)
+    return {
+        "success": True,
+        "message": f"Well {well.name} successfully reset to fluid pound demo state",
+        "well_name": well.name
+    }
+

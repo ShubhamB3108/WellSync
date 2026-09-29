@@ -7,6 +7,7 @@ from app.api.v1.auth import get_current_user
 from app.models.user import User
 from app.models.optimization import OptimizationRun
 from app.models.srp import SrpReading
+from app.models.alert import Alert
 from app.schemas.optimization import OptimizationRunResponse, RejectRequest
 
 router = APIRouter(prefix="/optimization-runs", tags=["optimization"])
@@ -58,6 +59,15 @@ def approve_recommendation(
                     estimated_fluid_level_m=350.0
                 )
                 db.add(new_reading)
+                
+                # Auto-acknowledge active fluid pound alerts for this well since mitigation was approved
+                active_alerts = db.query(Alert).filter(
+                    Alert.well_id == run.well_id,
+                    Alert.alert_type == "fluid_pound",
+                    Alert.acknowledged_at == None
+                ).all()
+                for a in active_alerts:
+                    a.acknowledged_at = now
         except Exception as e:
             print(f"Error applying approved SRP setpoint: {e}")
             
