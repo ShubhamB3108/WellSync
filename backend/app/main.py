@@ -81,20 +81,18 @@ app.include_router(alerts_router, prefix=settings.API_V1_STR)
 app.include_router(reports_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health_check(db=Depends(get_db)):
-    """Standard health check endpoint."""
+    """Standard health check endpoint supporting GET and HEAD."""
     db_status = "ok"
     try:
         db.execute(text("SELECT 1"))
     except Exception as e:
         db_status = f"unhealthy: {str(e)}"
         
-    model = get_model()
     return {
         "status": "healthy",
         "db": db_status,
         "simulator": "running" if settings.SIMULATOR_ENABLED else "disabled",
-        "model_loaded": model is not None or True,
         "field": "Baghewala, Rajasthan (Jodhpur Sandstone)"
     }

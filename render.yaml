@@ -28,7 +28,7 @@ services:
     branch: feature/frontend-improvements
     plan: free
     buildCommand: "pip install -r requirements.txt && python ml/train_dyno_classifier.py"
-    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1"
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
@@ -38,7 +38,7 @@ services:
       - key: SIMULATOR_ENABLED
         value: "true"
       - key: SIMULATOR_TICK_SECONDS
-        value: "10"
+        value: "30"
       - key: PYTHON_VERSION
         value: "3.11.9"
 

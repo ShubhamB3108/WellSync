@@ -295,3 +295,32 @@ def run_simulator_tick(db: Session):
         db.add(reading)
         
     db.commit()
+    prune_old_simulation_data(db, max_per_well=50)
+
+def prune_old_simulation_data(db: Session, max_per_well: int = 50):
+    """
+    Keeps memory footprint and database size strictly bounded by retaining only
+    the latest max_per_well records per well.
+    """
+    try:
+        from sqlalchemy import text
+        db.execute(text("""
+            DELETE FROM dyno_cards WHERE id IN (
+                SELECT id FROM (
+                    SELECT id, ROW_NUMBER() OVER (PARTITION BY well_id ORDER BY card_time DESC) as rn
+                    FROM dyno_cards
+                ) t WHERE t.rn > :max_per_well
+            );
+        """), {"max_per_well": max_per_well})
+        db.execute(text("""
+            DELETE FROM srp_readings WHERE id IN (
+                SELECT id FROM (
+                    SELECT id, ROW_NUMBER() OVER (PARTITION BY well_id ORDER BY reading_time DESC) as rn
+                    FROM srp_readings
+                ) t WHERE t.rn > :max_per_well
+            );
+        """), {"max_per_well": max_per_well})
+        db.commit()
+    except Exception:
+        db.rollback()
+

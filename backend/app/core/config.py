@@ -32,7 +32,7 @@ class Settings:
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./wellsync.db")
     
     # Simulator & Scheduler
-    SIMULATOR_TICK_SECONDS: int = int(os.getenv("SIMULATOR_TICK_SECONDS", "10"))
+    SIMULATOR_TICK_SECONDS: int = int(os.getenv("SIMULATOR_TICK_SECONDS", "30"))
     SIMULATOR_ENABLED: bool = os.getenv("SIMULATOR_ENABLED", "true").lower() == "true"
     
     # CORS

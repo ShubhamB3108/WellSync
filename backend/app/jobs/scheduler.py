@@ -55,6 +55,8 @@ def scheduled_simulator_tick():
         print(f"Error in scheduled simulator tick: {e}")
     finally:
         db.close()
+        import gc
+        gc.collect()
 
 def start_scheduler():
     if not scheduler.running:

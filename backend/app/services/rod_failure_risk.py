@@ -17,10 +17,11 @@ def calculate_rod_failure_risk(well: Well) -> Dict[str, Any]:
     
     # 1. Fluid pound frequency in past 90 days
     ninety_days_ago = now - timedelta(days=90)
-    recent_cards = [c for c in (well.dyno_cards or []) if c.card_time and (c.card_time.tzinfo is not None and c.card_time >= ninety_days_ago)]
-    if not recent_cards and well.dyno_cards:
+    cards_slice = (well.dyno_cards[:20] if well.dyno_cards else [])
+    recent_cards = [c for c in cards_slice if c.card_time and (c.card_time.tzinfo is not None and c.card_time >= ninety_days_ago)]
+    if not recent_cards and cards_slice:
         # Fallback to last 10 cards if mock dates are sparse
-        recent_cards = well.dyno_cards[:10]
+        recent_cards = cards_slice[:10]
         
     fluid_pound_count = sum(1 for c in recent_cards if c.classification == "fluid_pound")
     fp_ratio = fluid_pound_count / max(1, len(recent_cards))
