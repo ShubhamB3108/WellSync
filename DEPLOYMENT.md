@@ -252,35 +252,3 @@ docker compose exec -t db pg_dump -U wellsync wellsync > wellsync_backup_$(date 
 cat wellsync_backup_2026-09-28.sql | docker compose exec -T db psql -U wellsync -d wellsync
 ```
 
----
-
-## 🌐 Render Cloud Deployment & UptimeRobot (uptimerobot.com)
-
-Render free-tier web services spin down after **15 minutes** of inactivity. To ensure zero cold-start delay for evaluators, judges, and operators, WellSync is integrated with **UptimeRobot** ([uptimerobot.com](https://uptimerobot.com/)).
-
-### 1. The 15-Minute Render Idle Problem
-When a free instance receives no inbound HTTP traffic for 15 minutes, Render spins down the container. The next user who opens the app experiences a 30–60 second cold-start delay while the container boots up.
-
-### 2. Solution: Integrating UptimeRobot (uptimerobot.com)
-UptimeRobot performs free, continuous external uptime and ping monitoring. Every periodic probe routes through Render's external ingress router, resetting Render's 15-minute countdown and keeping the backend permanently active.
-
-#### Step-by-Step Setup:
-1. Go to [https://uptimerobot.com/](https://uptimerobot.com/) and create a free account (or log in).
-2. Click **"+ Add New Monitor"**.
-3. Configure the monitor:
-   - **Monitor Type**: `HTTP(s)`
-   - **Friendly Name**: `WellSync Backend`
-   - **URL (or IP)**: `https://wellsync-backend-1emc.onrender.com/health`
-     *(Alternative endpoint: `https://wellsync-backend-1emc.onrender.com/api/v1/uptime/ping`)*
-   - **Monitoring Interval**: `5 minutes` *(safely below Render's 15-minute timeout)*
-   - **HTTP Method**: `GET` or `HEAD`
-   - **Accepted Status Code**: `200 OK`
-4. Save the monitor. UptimeRobot will now ping the backend around the clock.
-
-### 3. Multi-Layer Anti-Sleep Defense Architecture
-WellSync implements a 4-layer defense against Render idle timeouts:
-1. **UptimeRobot ([uptimerobot.com](https://uptimerobot.com/))**: External cloud probe pinging `/health` every 5 minutes.
-2. **GitHub Actions Workflow** ([`.github/workflows/uptimerobot-keepalive.yml`](file:///d:/wellSync/.github/workflows/uptimerobot-keepalive.yml)): Scheduled cron running `curl` every 10 minutes.
-3. **APScheduler Internal Worker** ([`backend/app/jobs/keep_alive.py`](file:///d:/wellSync/backend/app/jobs/keep_alive.py)): Outbound self-ping every 10 minutes through Render's external router.
-4. **Browser Dashboard Keeper** ([`frontend/src/App.tsx`](file:///d:/wellSync/frontend/src/App.tsx)): Silently pings `/api/v1/uptime/ping` every 5 minutes while the dashboard is open in any browser tab.
-

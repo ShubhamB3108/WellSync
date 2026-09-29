@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './state/authStore';
 import { useLoadingStore } from './state/loadingStore';
-import { alertsApi, uptimeApi } from './api/client';
+import { alertsApi } from './api/client';
 
 import { Login } from './pages/Login';
 import { FieldOverview } from './pages/FieldOverview';
@@ -28,7 +28,6 @@ const queryClient = new QueryClient({
 });
 
 const ALERT_POLL_INTERVAL_MS = 60000; // 60s background alert count check
-const KEEPALIVE_PING_INTERVAL_MS = 300000; // 5 min Render anti-sleep keep-alive
 
 const ProtectedLayout: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
@@ -48,16 +47,9 @@ const ProtectedLayout: React.FC = () => {
     if (isAuthenticated) {
       fetchAlertCount(false);
       const alertInterval = setInterval(() => fetchAlertCount(true), ALERT_POLL_INTERVAL_MS);
-      
-      // Keep Render backend awake while dashboard is open
-      uptimeApi.ping().catch(() => {});
-      const keepAliveInterval = setInterval(() => {
-        uptimeApi.ping().catch(() => {});
-      }, KEEPALIVE_PING_INTERVAL_MS);
 
       return () => {
         clearInterval(alertInterval);
-        clearInterval(keepAliveInterval);
       };
     }
   }, [isAuthenticated]);

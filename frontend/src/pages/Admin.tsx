@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Shield,
   Upload,
   Database,
   Users,
@@ -8,23 +7,14 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   Plus,
-  Loader2,
-  Globe,
-  Activity,
-  ExternalLink,
-  Copy,
-  Check,
-  Clock,
-  Radio,
-  Zap,
-  Server
+  Loader2
 } from 'lucide-react';
-import { adminApi, uptimeApi } from '../api/client';
+import { adminApi } from '../api/client';
 import { User } from '../types';
 import { DatabaseLoader } from '../components/DatabaseLoader';
 
 export const Admin: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'sources' | 'users' | 'uptimerobot'>('sources');
+  const [activeTab, setActiveTab] = useState<'sources' | 'users'>('sources');
   const [currentSource, setCurrentSource] = useState<string>('simulator');
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<any>(null);
@@ -40,13 +30,6 @@ export const Admin: React.FC = () => {
   const [newRole, setNewRole] = useState('field_engineer');
   const [isCreatingUser, setIsCreatingUser] = useState(false);
 
-  // Domain Monitor & Uptime Telemetry
-  const [uptimeStats, setUptimeStats] = useState<any>(null);
-  const [isLoadingUptime, setIsLoadingUptime] = useState<boolean>(false);
-  const [isPinging, setIsPinging] = useState<boolean>(false);
-  const [pingResult, setPingResult] = useState<{ status: string; latencyMs?: number; timestamp: string } | null>(null);
-  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
-
   const fetchUsers = async () => {
     try {
       setIsLoadingUsers(true);
@@ -59,51 +42,9 @@ export const Admin: React.FC = () => {
     }
   };
 
-  const fetchUptimeStats = async () => {
-    try {
-      setIsLoadingUptime(true);
-      const data = await uptimeApi.getStats();
-      setUptimeStats(data);
-    } catch (err) {
-      console.error('Error fetching uptime stats:', err);
-    } finally {
-      setIsLoadingUptime(false);
-    }
-  };
-
   useEffect(() => {
     fetchUsers();
-    fetchUptimeStats();
   }, []);
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedUrl(text);
-    setTimeout(() => setCopiedUrl(null), 2500);
-  };
-
-  const handleTestPing = async () => {
-    setIsPinging(true);
-    const start = performance.now();
-    try {
-      await uptimeApi.ping();
-      const elapsed = Math.round(performance.now() - start);
-      setPingResult({
-        status: 'success',
-        latencyMs: elapsed,
-        timestamp: new Date().toLocaleTimeString(),
-      });
-      const data = await uptimeApi.getStats();
-      setUptimeStats(data);
-    } catch (err) {
-      setPingResult({
-        status: 'error',
-        timestamp: new Date().toLocaleTimeString(),
-      });
-    } finally {
-      setIsPinging(false);
-    }
-  };
 
 
   const handleUploadCsv = async (e: React.FormEvent) => {
@@ -182,16 +123,6 @@ export const Admin: React.FC = () => {
         >
           <Users size={14} />
           <span>Operational User Accounts & RBAC</span>
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('uptimerobot');
-            fetchUptimeStats();
-          }}
-          className={`btn btn-sm ${activeTab === 'uptimerobot' ? 'btn-primary' : 'btn-secondary'}`}
-        >
-          <Globe size={14} />
-          <span>UptimeRobot (uptimerobot.com) & Keep-Alive</span>
         </button>
       </div>
 
@@ -430,246 +361,6 @@ export const Admin: React.FC = () => {
                 <span>{isCreatingUser ? 'Creating...' : 'Add Account'}</span>
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 3: UptimeRobot & Keep-Alive */}
-      {activeTab === 'uptimerobot' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Top Banner */}
-          <div className="panel" style={{
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.08))',
-            borderColor: 'rgba(59, 130, 246, 0.3)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '10px',
-                  backgroundColor: '#0F1419',
-                  border: '1px solid rgba(59, 130, 246, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)'
-                }}>
-                  <Globe size={24} color="#3B82F6" />
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      UptimeRobot (uptimerobot.com) Integration
-                    </h2>
-                    <span className="badge badge-normal" style={{ fontSize: '10px' }}>
-                      24/7 Anti-Sleep Active
-                    </span>
-                  </div>
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                    Render free web services spin down after 15 minutes of inactivity. Monitor via <strong>uptimerobot.com</strong> to keep the backend permanently awake.
-                  </p>
-                </div>
-              </div>
-
-              <a
-                href="https://uptimerobot.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary btn-sm"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
-              >
-                <span>Open uptimerobot.com</span>
-                <ExternalLink size={13} />
-              </a>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '20px' }}>
-            {/* Left: Setup Instructions & Endpoints */}
-            <div className="panel">
-              <div className="panel-header">
-                <div className="panel-title">
-                  <Server size={18} color="var(--accent-blue)" />
-                  <span>Setup Guide for UptimeRobot</span>
-                </div>
-                <span className="badge badge-info">1-Minute Setup</span>
-              </div>
-
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
-                Follow these simple steps on <a href="https://uptimerobot.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-blue)' }}>uptimerobot.com</a> to ensure zero cold-start delay for evaluators:
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-                <div style={{ padding: '12px', backgroundColor: 'var(--bg-elevated)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-blue)', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    Step 1: Create an HTTP(s) Monitor
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
-                    In your UptimeRobot dashboard, click <strong>"+ Add New Monitor"</strong> and select Monitor Type: <strong>HTTP(s)</strong>.
-                  </div>
-                </div>
-
-                <div style={{ padding: '12px', backgroundColor: 'var(--bg-elevated)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-blue)', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    Step 2: Paste the Health Probe URL
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-                    <code style={{
-                      flex: 1,
-                      backgroundColor: '#0F1419',
-                      padding: '8px 10px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      color: '#22C55E',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {uptimeStats?.uptimerobot_setup?.recommended_url || uptimeStats?.domain_monitor_setup?.recommended_url || 'https://wellsync-backend-1emc.onrender.com/health'}
-                    </code>
-                    <button
-                      onClick={() => handleCopy(uptimeStats?.uptimerobot_setup?.recommended_url || uptimeStats?.domain_monitor_setup?.recommended_url || 'https://wellsync-backend-1emc.onrender.com/health')}
-                      className="btn btn-secondary btn-sm"
-                      title="Copy URL"
-                    >
-                      {copiedUrl?.includes('/health') ? <Check size={13} color="#22C55E" /> : <Copy size={13} />}
-                      <span>{copiedUrl?.includes('/health') ? 'Copied' : 'Copy'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ padding: '12px', backgroundColor: 'var(--bg-elevated)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-blue)', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    Step 3: Set Check Frequency to 5 Minutes
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    Because Render sleeps after <strong>15 minutes</strong>, choosing a <strong>5-minute interval</strong> guarantees that Render’s idle timer is continuously reset before sleeping.
-                  </div>
-                </div>
-              </div>
-
-              {/* Secondary Ping URL */}
-              <div style={{ padding: '12px', backgroundColor: 'var(--bg-elevated)', borderRadius: '6px' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  Alternative dedicated ping endpoint (Supports GET & HEAD):
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <code style={{ fontSize: '11px', color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {uptimeStats?.uptimerobot_setup?.alternative_url || uptimeStats?.domain_monitor_setup?.alternative_url || 'https://wellsync-backend-1emc.onrender.com/api/v1/uptime/ping'}
-                  </code>
-                  <button
-                    onClick={() => handleCopy(uptimeStats?.uptimerobot_setup?.alternative_url || uptimeStats?.domain_monitor_setup?.alternative_url || 'https://wellsync-backend-1emc.onrender.com/api/v1/uptime/ping')}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    {copiedUrl?.includes('/uptime/ping') ? <Check size={13} color="#22C55E" /> : <Copy size={13} />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Live Telemetry & Test Ping */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="panel">
-                <div className="panel-header">
-                  <div className="panel-title">
-                    <Activity size={18} color="var(--status-normal)" />
-                    <span>Live Uptime Telemetry</span>
-                  </div>
-                  <button
-                    onClick={handleTestPing}
-                    disabled={isPinging}
-                    className="btn btn-primary btn-sm"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                  >
-                    {isPinging ? <Loader2 size={13} className="spin" /> : <Zap size={13} />}
-                    <span>{isPinging ? 'Pinging...' : 'Test Ping Now'}</span>
-                  </button>
-                </div>
-
-                {pingResult && (
-                  <div style={{
-                    padding: '10px 14px',
-                    borderRadius: '6px',
-                    marginBottom: '16px',
-                    backgroundColor: pingResult.status === 'success' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                    border: `1px solid ${pingResult.status === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    fontSize: '12px'
-                  }}>
-                    <span style={{ color: pingResult.status === 'success' ? 'var(--status-normal)' : 'var(--status-critical)', fontWeight: 600 }}>
-                      {pingResult.status === 'success'
-                        ? `✓ Ping Successful (${pingResult.latencyMs}ms roundtrip)`
-                        : '✗ Ping Failed to reach backend'}
-                    </span>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '11px' }}>
-                      {pingResult.timestamp}
-                    </span>
-                  </div>
-                )}
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                  <div style={{ padding: '12px', backgroundColor: 'var(--bg-elevated)', borderRadius: '6px' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Server Uptime</div>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px', fontFamily: 'monospace' }}>
-                      {uptimeStats?.uptime_human || 'Active'}
-                    </div>
-                  </div>
-
-                  <div style={{ padding: '12px', backgroundColor: 'var(--bg-elevated)', borderRadius: '6px' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Total Pings Recorded</div>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--accent-blue)', marginTop: '4px', fontFamily: 'monospace' }}>
-                      {uptimeStats?.total_pings_received ?? 0}
-                    </div>
-                  </div>
-
-                  <div style={{ padding: '12px', backgroundColor: 'var(--bg-elevated)', borderRadius: '6px' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Last Ping Source</div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {uptimeStats?.last_ping_source || 'direct'}
-                    </div>
-                  </div>
-
-                  <div style={{ padding: '12px', backgroundColor: 'var(--bg-elevated)', borderRadius: '6px' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Internal Scheduler</div>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--status-normal)', marginTop: '4px' }}>
-                      Every {uptimeStats?.render_config?.interval_minutes || 10} min
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 4-Layer Anti-Sleep Protection Status */}
-              <div className="panel">
-                <div className="panel-header">
-                  <div className="panel-title">
-                    <Shield size={18} color="var(--accent-blue)" />
-                    <span>4-Layer Anti-Sleep Defense</span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'var(--bg-elevated)', borderRadius: '4px' }}>
-                    <span style={{ color: 'var(--text-primary)' }}>1. UptimeRobot (uptimerobot.com) Cloud Probe</span>
-                    <span className="badge badge-normal" style={{ fontSize: '10px' }}>Recommended</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'var(--bg-elevated)', borderRadius: '4px' }}>
-                    <span style={{ color: 'var(--text-primary)' }}>2. GitHub Actions Automated Cron</span>
-                    <span className="badge badge-info" style={{ fontSize: '10px' }}>Every 10 min</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'var(--bg-elevated)', borderRadius: '4px' }}>
-                    <span style={{ color: 'var(--text-primary)' }}>3. Internal Backend Self-Pinger</span>
-                    <span className="badge badge-normal" style={{ fontSize: '10px' }}>Active</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'var(--bg-elevated)', borderRadius: '4px' }}>
-                    <span style={{ color: 'var(--text-primary)' }}>4. Browser Dashboard Active Keeper</span>
-                    <span className="badge badge-normal" style={{ fontSize: '10px' }}>Active</span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, Request, Response
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from app.core.config import settings
@@ -8,7 +8,6 @@ from app.core.security import get_password_hash
 from app.models.user import User
 from app.ingestion.simulator import seed_demo_data
 from app.jobs.scheduler import start_scheduler, shutdown_scheduler
-from app.jobs.keep_alive import record_ping
 from app.services.dyno_classifier import get_model
 
 # Routers
@@ -20,7 +19,6 @@ from app.api.v1.optimization import router as opt_router
 from app.api.v1.alerts import router as alerts_router
 from app.api.v1.reports import router as reports_router
 from app.api.v1.admin import router as admin_router
-from app.api.v1.uptime import router as uptime_router
 
 def seed_demo_users(db):
     demo_users = [
@@ -82,23 +80,10 @@ app.include_router(opt_router, prefix=settings.API_V1_STR)
 app.include_router(alerts_router, prefix=settings.API_V1_STR)
 app.include_router(reports_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
-app.include_router(uptime_router, prefix=settings.API_V1_STR)
 
-@app.api_route("/health", methods=["GET", "HEAD"])
-def health_check(request: Request, response: Response, db=Depends(get_db)):
-    """
-    Health check and uptime monitoring probe for Render and UptimeRobot (https://uptimerobot.com/).
-    Supports both GET and HEAD methods. Resets the 15-minute Render free-tier sleep timer.
-    """
-    source = request.headers.get("user-agent", "health-check")
-    record_ping(source=source)
-    
-    # Disable caching so proxy checks are always counted
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    response.headers["X-WellSync-Status"] = "healthy"
-    
+@app.get("/health")
+def health_check(db=Depends(get_db)):
+    """Standard health check endpoint."""
     db_status = "ok"
     try:
         db.execute(text("SELECT 1"))
@@ -111,9 +96,5 @@ def health_check(request: Request, response: Response, db=Depends(get_db)):
         "db": db_status,
         "simulator": "running" if settings.SIMULATOR_ENABLED else "disabled",
         "model_loaded": model is not None or True,
-        "field": "Baghewala, Rajasthan (Jodhpur Sandstone)",
-        "monitoring": {
-            "service": "UptimeRobot (uptimerobot.com) ready",
-            "anti_sleep": "active"
-        }
+        "field": "Baghewala, Rajasthan (Jodhpur Sandstone)"
     }

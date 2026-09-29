@@ -254,22 +254,3 @@ export const adminApi = {
   },
 };
 
-export const uptimeApi = {
-  getStats: async (): Promise<any> => {
-    const res = await apiClient.get('/uptime/stats', {
-      headers: { 'x-silent': 'true' },
-    });
-    return res.data;
-  },
-  ping: async (): Promise<any> => {
-    const res = await apiClient.get('/uptime/ping', {
-      headers: { 'x-silent': 'true' },
-    });
-    return res.data;
-  },
-  testOutboundPing: async (): Promise<any> => {
-    const res = await apiClient.post('/uptime/test-ping');
-    return res.data;
-  },
-};
-
