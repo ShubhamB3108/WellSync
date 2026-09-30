@@ -66,6 +66,9 @@ def start_scheduler():
                 "interval",
                 seconds=settings.SIMULATOR_TICK_SECONDS,
                 id="simulator_tick",
+                max_instances=1,
+                coalesce=True,
+                misfire_grace_time=30,
                 replace_existing=True
             )
         

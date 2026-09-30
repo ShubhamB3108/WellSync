@@ -38,7 +38,7 @@ services:
       - key: SIMULATOR_ENABLED
         value: "true"
       - key: SIMULATOR_TICK_SECONDS
-        value: "30"
+        value: "60"
       - key: PYTHON_VERSION
         value: "3.11.9"
 
