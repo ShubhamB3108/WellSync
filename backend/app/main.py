@@ -7,7 +7,6 @@ from app.core.database import init_db, SessionLocal, get_db
 from app.core.security import get_password_hash
 from app.models.user import User
 from app.ingestion.simulator import seed_demo_data
-from app.jobs.scheduler import start_scheduler, shutdown_scheduler
 from app.services.dyno_classifier import get_model
 
 # Routers
@@ -49,10 +48,7 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
         
-    start_scheduler()
     yield
-    # Shutdown:
-    shutdown_scheduler()
 
 app = FastAPI(
     title="WellSync API",

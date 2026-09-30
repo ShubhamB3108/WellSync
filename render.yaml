@@ -36,7 +36,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: SIMULATOR_ENABLED
-        value: "true"
+        value: "false"
       - key: SIMULATOR_TICK_SECONDS
         value: "60"
       - key: PYTHON_VERSION

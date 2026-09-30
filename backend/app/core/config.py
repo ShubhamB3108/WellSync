@@ -33,7 +33,7 @@ class Settings:
     
     # Simulator & Scheduler
     SIMULATOR_TICK_SECONDS: int = int(os.getenv("SIMULATOR_TICK_SECONDS", "60"))
-    SIMULATOR_ENABLED: bool = os.getenv("SIMULATOR_ENABLED", "true").lower() == "true"
+    SIMULATOR_ENABLED: bool = os.getenv("SIMULATOR_ENABLED", "false").lower() == "true"
     
     # CORS
     _cors_raw: str = os.getenv("CORS_ORIGINS", "")
